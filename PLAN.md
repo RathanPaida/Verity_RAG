@@ -175,6 +175,8 @@ Runs & metrics, Evaluation, citation drawer with in-source highlighting).
 service account + IAM, Cloud Build, Cloud Run, Secret Manager, GCS bucket, Eventarc trigger, backfill Job.
 
 **Phase 10: Hardening** ✅ / 🔑
+- 54-question categorised golden set (cross-tenant + prompt-injection cases), 95% bootstrap CIs, per-category metrics, retrieval ablations ([docs/ABLATIONS.md](docs/ABLATIONS.md)) ✅
+- Per-engagement source IDs (multi-tenant fix) and a persistent embedding cache ✅
 - Real-model run with the Gemini API (`scripts/showcase.py` → [docs/RESULTS.md](docs/RESULTS.md)) ✅
 - Model fallback chain + 429 circuit breaker + thinking-token cost accounting ✅ (see [docs/FIELD_NOTES.md](docs/FIELD_NOTES.md))
 - Semantic answer cache (invalidated when sources or memories change) for lower cost per request ✅

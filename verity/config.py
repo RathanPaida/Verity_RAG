@@ -41,6 +41,8 @@ class Settings:
     embedding_provider = os.getenv("EMBEDDING_PROVIDER", "gemini")  # gemini | vertex (alias) | hash
     embedding_model = os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
     embedding_dim = _i("EMBEDDING_DIM", 768)
+    # persistent content-addressed embedding cache; empty string disables
+    embedding_cache_path = os.getenv("EMBEDDING_CACHE_PATH", ".cache/embeddings.sqlite")
 
     # Chunking
     chunk_tokens = _i("CHUNK_TOKENS", 350)

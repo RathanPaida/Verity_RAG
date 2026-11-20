@@ -12,7 +12,7 @@ from bson import ObjectId
 from pymongo.errors import OperationFailure
 
 from .. import db
-from ..embeddings import cosine, get_embedder
+from ..embeddings import cosine, embed_query, get_embedder
 from ..security import redact
 
 TYPES = ["preference", "client_statement", "finding_feedback", "decision", "constraint"]
@@ -41,7 +41,7 @@ def forget(memory_id: str) -> None:
 
 
 def recall(engagement_id: str, query: str, k: int = 5, min_score: float = 0.55) -> list[dict]:
-    qv = get_embedder().embed([query], kind="query")[0]
+    qv = embed_query(query)
     filt = {"$and": [{"engagement_id": engagement_id}, {"status": "active"}]}
     try:
         docs = list(db.memories().aggregate([

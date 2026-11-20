@@ -16,7 +16,7 @@ from pymongo.errors import OperationFailure
 
 from .. import db
 from ..config import settings
-from ..embeddings import cosine, get_embedder
+from ..embeddings import cosine, embed_query, get_embedder
 
 _backend = {"vector": "unknown", "text": "unknown"}
 
@@ -96,7 +96,7 @@ _PROJECT = {"embedding": 0}
 
 
 def vector_search(query: str, f: Filters, k: int) -> list[tuple[dict, float]]:
-    qv = get_embedder().embed([query], kind="query")[0]
+    qv = embed_query(query)
     pipeline = [
         {"$vectorSearch": {"index": settings.vector_index, "path": "embedding", "queryVector": qv,
                            "numCandidates": max(100, k * 15), "limit": k, "filter": f.mql()}},

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import math
 import re
 from functools import lru_cache
@@ -90,10 +91,68 @@ def cosine(a, b) -> float:
     return sum(x * y for x, y in zip(a, b))  # inputs are L2-normalised
 
 
+class CachedEmbedder(Embedder):
+    """Content-addressed, persistent embedding cache (SQLite) in front of a paid/quota-limited embedder.
+    Key = sha256(model, dims, task, text). Re-ingesting unchanged content or re-running evals costs 0 calls."""
+
+    def __init__(self, inner: Embedder, path: str):
+        import sqlite3
+        import threading
+
+        self.inner, self.name, self.dim = inner, inner.name, inner.dim
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        self._db = sqlite3.connect(path, check_same_thread=False)
+        self._db.execute("CREATE TABLE IF NOT EXISTS emb (k TEXT PRIMARY KEY, v TEXT)")
+        self._lock = threading.Lock()
+        self.hits = self.misses = 0
+
+    def _key(self, text: str, kind: str) -> str:
+        return hashlib.sha256(f"{self.name}|{self.dim}|{kind}|{text}".encode()).hexdigest()
+
+    def embed(self, texts, kind="document"):
+        import json
+
+        keys = [self._key(t, kind) for t in texts]
+        with self._lock:
+            found = {}
+            for i in range(0, len(keys), 500):
+                part = keys[i:i + 500]
+                q = f"SELECT k, v FROM emb WHERE k IN ({','.join('?' * len(part))})"
+                found.update(dict(self._db.execute(q, part).fetchall()))
+        missing = [i for i, k in enumerate(keys) if k not in found]
+        self.hits += len(texts) - len(missing)
+        self.misses += len(missing)
+        if missing:
+            vecs = self.inner.embed([texts[i] for i in missing], kind=kind)
+            with self._lock:
+                self._db.executemany("INSERT OR REPLACE INTO emb VALUES (?, ?)",
+                                     [(keys[i], json.dumps(v)) for i, v in zip(missing, vecs)])
+                self._db.commit()
+            for i, v in zip(missing, vecs):
+                found[keys[i]] = v
+        return [json.loads(found[k]) if isinstance(found[k], str) else found[k] for k in keys]
+
+
 @lru_cache(maxsize=1)
 def get_embedder() -> Embedder:
     if settings.embedding_provider == "hash":
         return HashEmbedder(settings.embedding_dim)
     if settings.embedding_provider in ("gemini", "vertex"):
-        return GeminiEmbedder()
+        inner = GeminiEmbedder()
+        return CachedEmbedder(inner, settings.embedding_cache_path) if settings.embedding_cache_path else inner
     raise ValueError(f"unknown EMBEDDING_PROVIDER {settings.embedding_provider!r} (gemini | vertex | hash)")
+
+
+_query_cache: dict[tuple[str, str], list[float]] = {}
+
+
+def embed_query(text: str) -> list[float]:
+    """Query embeddings are cached in-process (same question -> same vector), which saves latency and quota
+    in evaluation loops and repeated searches."""
+    e = get_embedder()
+    key = (e.name, text)
+    if key not in _query_cache:
+        if len(_query_cache) > 5000:
+            _query_cache.clear()
+        _query_cache[key] = e.embed([text], kind="query")[0]
+    return _query_cache[key]

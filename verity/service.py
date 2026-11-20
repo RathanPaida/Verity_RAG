@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from . import db
 from .agents.graph import graph
 from .config import settings
-from .embeddings import cosine, get_embedder
+from .embeddings import cosine, embed_query
 from .observability.tracing import start_run
 from .retrieval.hybrid import backends
 
@@ -43,7 +43,7 @@ def _cache_lookup(engagement_id: str, qvec: list[float], fp: str, filters: dict 
 def ask(question: str, engagement_id: str, user_id: str = "analyst", filters: dict | None = None,
         use_cache: bool = True) -> dict:
     fp = corpus_fingerprint(engagement_id)
-    qvec = get_embedder().embed([question], kind="query")[0] if use_cache else None
+    qvec = embed_query(question) if use_cache else None
     if use_cache:
         hit = _cache_lookup(engagement_id, qvec, fp, filters)
         if hit:

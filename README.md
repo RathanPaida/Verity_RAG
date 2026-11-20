@@ -112,30 +112,46 @@ docs/     RESULTS.md (real run) · DISCOVERY.md · FIELD_NOTES.md
 
 ## 6. Results
 
-### Real run with Gemini (2026-11-20; full report in [docs/RESULTS.md](docs/RESULTS.md))
+### Evaluation design ([eval/golden.jsonl](eval/golden.jsonl))
 
-Gemini API free tier · `gemini-embedding-001` (768-d) · agents answered by `gemini-3.5-flash-lite` after fallback ·
-in-process MongoDB with the Python cosine/BM25 retrieval fallbacks (no Atlas cluster was available).
+**54 questions in 9 categories:**
 
-| retrieval (12 golden Qs, k=5) | recall@5 | MRR | nDCG@5 |
+| keyword | semantic | multi-source | structured | conflict | temporal | unanswerable | cross-tenant | injection |
+|---|---|---|---|---|---|---|---|---|
+| 8 | 10 | 10 | 8 | 4 | 3 | 5 | 3 | 3 |
+
+Each question carries:
+- expected source IDs (46 of the 54 have them)
+- facts the answer must contain
+- strings it must never contain (another client's data, injected instructions)
+- whether a conflict between sources should be flagged
+
+The corpus has 14 Acme sources (12 documents + 2 CSV tables) plus a second client ("Globex") whose documents
+deliberately contain the answers to Acme's cross-tenant questions. A partner document also contains a planted
+prompt injection. All metrics are reported with 95% bootstrap confidence intervals and per-category breakdowns.
+
+### Retrieval with Gemini embeddings (46 questions; full table in [docs/ABLATIONS.md](docs/ABLATIONS.md))
+
+| mode | recall@5 [95% CI] | MRR [95% CI] |
+|---|---|---|
+| vector | 0.98 [0.95–1.00] | 0.95 [0.90–0.99] |
+| keyword (BM25) | 0.90 [0.81–0.97] | 0.83 [0.73–0.91] |
+| hybrid (RRF, weights 1.0 / 0.5) | 0.98 [0.95–1.00] | 0.95 [0.90–0.99] |
+
+Cross-tenant leakage: 0 passages across all configurations.
+
+### Agent with Gemini (first run, 12-question set; full report in [docs/RESULTS.md](docs/RESULTS.md))
+
+| abstention accuracy | citation precision | faithfulness (LLM judge) | mean cost / question |
 |---|---|---|---|
-| vector (Gemini embeddings) | 1.00 | 0.93 | 0.95 |
-| keyword (BM25) | 0.90 | 0.80 | 0.83 |
-| hybrid (RRF) | 1.00 | 0.93 | 0.94 |
+| 12/12 | 0.84 | 0.88 | $0.006 |
 
-| agent | abstention accuracy | citation precision | faithfulness (LLM judge) | mean cost / question |
-|---|---|---|---|---|
-| full graph | **1.00** (12/12; both unanswerable Qs refused) | 0.84 | 0.88 | $0.006 |
+The 54-question agent evaluation (fact recall, conflict detection, injection and leakage safety) is resumable:
+`python -m eval.run_eval --ingest data/sample --agent --judge --resume --out eval/results/agent-54.json`.
+The free Gemini tier allows 1,000 embedding requests per day, so a full run may span two days. A persistent
+embedding cache (`.cache/embeddings.sqlite`) means repeat runs don't spend quota again.
 
-Latency (p50 56 s, p95 16 min) is dominated by free-tier rate-limit waits, not by the system. The conflict between
-the architecture doc and the July postmortem was flagged automatically. Re-run with `python -m scripts.showcase`.
+### Offline baseline (fake LLM + hash embeddings, used by the CI gate)
 
-### Offline baseline (`eval/baseline.json`; fake LLM + hash embeddings, used by the CI gate)
-
-| mode | recall@5 | MRR | nDCG@5 |
-|---|---|---|---|
-| vector | 0.90 | 0.67 | 0.70 |
-| keyword (BM25) | 0.90 | 0.80 | 0.83 |
-| **hybrid (RRF)** | **1.00** | 0.72 | 0.78 |
-
-The offline numbers only show that the harness and the gate work; quality figures come from the real run above.
+Hybrid recall@5 0.90 on the 54-question set. The offline stand-in only shows that the harness and gate work;
+quality figures come from the Gemini runs above.
