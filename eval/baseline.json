@@ -1,0 +1,32 @@
+{
+  "config": {
+    "llm": "fake",
+    "embedding": "hash",
+    "rrf_k": 60,
+    "weights": [
+      1.0,
+      1.0
+    ],
+    "chunk_tokens": 350
+  },
+  "metrics": {
+    "vector.recall": 0.9,
+    "vector.hit": 0.9,
+    "vector.mrr": 0.665,
+    "vector.ndcg": 0.7001318277028713,
+    "text.recall": 0.9,
+    "text.hit": 0.9,
+    "text.mrr": 0.8,
+    "text.ndcg": 0.8261859507142916,
+    "hybrid.recall": 1.0,
+    "hybrid.hit": 1.0,
+    "hybrid.mrr": 0.7150000000000001,
+    "hybrid.ndcg": 0.7835311926113934,
+    "agent.abstention_accuracy": 0.8333333333333334,
+    "agent.citation_precision": 0.6145833333333333,
+    "agent.faithfulness": 0.54175,
+    "agent.p50_latency_ms": 15.7,
+    "agent.p95_latency_ms": 31.4,
+    "agent.mean_cost_usd": 0.0
+  }
+}
