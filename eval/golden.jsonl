@@ -1,0 +1,12 @@
+{"id": "g01", "question": "What caused the ERR-4471 errors on PAY-API?", "expected_sources": ["postmortem-2024-03-pay-api"], "answerable": true, "tags": ["keyword", "code"]}
+{"id": "g02", "question": "Is the payments platform really able to survive a regional outage?", "expected_sources": ["arch-overview", "postmortem-2024-07-region-outage"], "answerable": true, "tags": ["multi-source", "conflict"]}
+{"id": "g03", "question": "Where does the ledger database primary run and does it have a replica in another region?", "expected_sources": ["arch-overview", "postmortem-2024-07-region-outage"], "answerable": true, "tags": ["distant-section"]}
+{"id": "g04", "question": "When was the ledger-db failover runbook last tested?", "expected_sources": ["runbook-ledger-failover", "postmortem-2024-07-region-outage"], "answerable": true, "tags": ["multi-source"]}
+{"id": "g05", "question": "Which service had the most SEV1 and SEV2 incidents in 2024?", "expected_sources": ["incidents"], "answerable": true, "tags": ["structured"]}
+{"id": "g06", "question": "Are there problems with how credentials and service account keys are managed?", "expected_sources": ["security-review-2024"], "answerable": true, "tags": ["semantic"]}
+{"id": "g07", "question": "How well tested is the codebase, including disaster recovery testing?", "expected_sources": ["repo-summary"], "answerable": true, "tags": ["semantic"]}
+{"id": "g08", "question": "Which components have no clear owner or are a key-person risk?", "expected_sources": ["repo-summary"], "answerable": true, "tags": ["semantic"]}
+{"id": "g09", "question": "Why did restarting pods make the March incident worse?", "expected_sources": ["postmortem-2024-03-pay-api"], "answerable": true, "tags": ["paraphrase"]}
+{"id": "g10", "question": "What was the result of the SOC 2 Type II audit?", "expected_sources": [], "answerable": false, "tags": ["unanswerable"]}
+{"id": "g11", "question": "What is the monthly cloud bill for the payments platform?", "expected_sources": [], "answerable": false, "tags": ["unanswerable"]}
+{"id": "g12", "question": "Is ledger-db or the Redis cluster managed as infrastructure as code?", "expected_sources": ["repo-summary"], "answerable": true, "tags": ["keyword"]}
