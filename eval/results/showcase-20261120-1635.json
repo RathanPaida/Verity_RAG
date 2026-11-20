@@ -1,0 +1,3791 @@
+{
+ "started": "2026-11-20 16:35:45.850592+00:00",
+ "ingest": [
+  {
+   "source_id": "arch-overview@v1",
+   "status": "created",
+   "chunks": 5,
+   "privacy_findings": []
+  },
+  {
+   "source_id": "incidents@v1",
+   "status": "created",
+   "chunks": 12,
+   "privacy_findings": []
+  },
+  {
+   "source_id": "postmortem-2024-03-pay-api@v1",
+   "status": "created",
+   "chunks": 4,
+   "privacy_findings": []
+  },
+  {
+   "source_id": "postmortem-2024-07-region-outage@v1",
+   "status": "created",
+   "chunks": 5,
+   "privacy_findings": []
+  },
+  {
+   "source_id": "repo-summary@v1",
+   "status": "created",
+   "chunks": 3,
+   "privacy_findings": []
+  },
+  {
+   "source_id": "runbook-ledger-failover@v1",
+   "status": "created",
+   "chunks": 3,
+   "privacy_findings": []
+  },
+  {
+   "source_id": "security-review-2024@v1",
+   "status": "created",
+   "chunks": 6,
+   "privacy_findings": []
+  }
+ ],
+ "config": {
+  "llm_backend": "gemini-api",
+  "model_fast": "gemini-3.5-flash-lite",
+  "model_strong": "gemini-3-flash-preview",
+  "fallbacks": [
+   "gemini-3-flash-preview",
+   "gemini-3.5-flash-lite"
+  ],
+  "embeddings": "gemini-embedding-001",
+  "embedding_dim": 768,
+  "mongo": "mongomock (in-process)",
+  "retrieval_backends": {
+   "vector": "python-cosine",
+   "text": "python-bm25"
+  }
+ },
+ "search": [
+  [
+   "ERR-4471",
+   "vector",
+   [
+    "postmortem-2024-03-pay-api \u203a Root Cause",
+    "postmortem-2024-03-pay-api \u203a Summary",
+    "postmortem-2024-03-pay-api \u203a Remediation"
+   ]
+  ],
+  [
+   "ERR-4471",
+   "text",
+   [
+    "postmortem-2024-03-pay-api \u203a Summary",
+    "postmortem-2024-03-pay-api \u203a Root Cause",
+    "postmortem-2024-03-pay-api \u203a What Went Wrong"
+   ]
+  ],
+  [
+   "ERR-4471",
+   "hybrid",
+   [
+    "postmortem-2024-03-pay-api \u203a Root Cause",
+    "postmortem-2024-03-pay-api \u203a Summary",
+    "postmortem-2024-03-pay-api \u203a Remediation"
+   ]
+  ],
+  [
+   "database failover to another region",
+   "vector",
+   [
+    "arch-overview \u203a 4. Availability and Disaster Recovery",
+    "postmortem-2024-07-region-outage \u203a Root Cause",
+    "runbook-ledger-failover \u203a Steps"
+   ]
+  ],
+  [
+   "database failover to another region",
+   "text",
+   [
+    "arch-overview \u203a 4. Availability and Disaster Recovery",
+    "postmortem-2024-07-region-outage \u203a Root Cause",
+    "runbook-ledger-failover \u203a When to use"
+   ]
+  ],
+  [
+   "database failover to another region",
+   "hybrid",
+   [
+    "arch-overview \u203a 4. Availability and Disaster Recovery",
+    "postmortem-2024-07-region-outage \u203a Root Cause",
+    "runbook-ledger-failover \u203a When to use"
+   ]
+  ]
+ ],
+ "elapsed": 2833.3843681999715,
+ "briefs": [
+  {
+   "title": "Multi-source risk brief",
+   "run_id": "7a6cfababc78",
+   "status": "answered",
+   "answer": "**Answer**\nThe payments platform's top reliability risks stem from severe single-region data tier dependencies and historical database vulnerabilities. Specifically, ledger-db maintains its single primary and all read replicas entirely within us-east1 [S3], contributing to a total platform outage of over 3 hours during a regional networking incident [S2] and establishing database issues as the most frequent root cause of incidents [S6]. \n\n**Risk register**\n\n| Risk | Severity | Evidence | Recommendation |\n| :--- | :--- | :--- | :--- |\n| Single-region data tier dependency (ledger-db primary and replicas in us-east1) | High | The payments platform experienced a total outage of 3 hours 12 minutes during a regional networking incident in us-east1 [S2]; The data tier is effectively single-region with ledger-db having a single primary and both read replicas located in us-east1 [S3]. | Distribute data tier replicas across multiple regions and establish multi-region active-active capabilities. |\n| Frequent database-related incidents | High | Database issues are the most frequent root cause of incidents according to the incident register, accounting for 4 occurrences [S6]. | Conduct a comprehensive reliability review and hardening of database operations and failure modes. |\n| Publicly accessible legacy merchant admin console lacking MFA | High | The legacy merchant admin console uses username and password authentication only with no MFA and is accessible from the public internet [S13]. | Restrict network access to the admin console and enforce multi-factor authentication (MFA). |\n| Vulnerable HTTP library dependency in PAY-API | Medium | PAY-API depends on an HTTP library version containing a request-smuggling vulnerability [S12]. | Update the HTTP library dependency to a patched version free of request-smuggling vulnerabilities. |\n\n**Sources disagree**\n- There is a conflict regarding the disaster recovery posture: source A [S7] indicates a multi-region active-active deployment approach, whereas source B [S3] asserts the data tier is effectively single-region with ledger-db primary and read replicas located entirely in us-east1.\n\n**Open questions**\n- What are the detailed code-level authentication gaps or authorization vulnerabilities inside the core payment processing pipeline services other than the admin console and dependency vulnerability?\n- What are the recent test results or execution logs for the ledger-db manual failover runbook since it was last tested in staging in November 2022?",
+   "citations": [
+    {
+     "label": "S3",
+     "chunk_id": "postmortem-2024-07-region-outage@v1#2",
+     "source_id": "postmortem-2024-07-region-outage@v1",
+     "title": "Postmortem INC-1247 us-east1 regional outage",
+     "section_path": [
+      "Postmortem INC-1247: Full payments outage during us-east1 incident",
+      "Root Cause"
+     ],
+     "doc_date": "2024-07-22 00:00:00+00:00",
+     "passage": "Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Root Cause\n\nThe platform is effectively single-region for its data tier. Stateless services run in both regions, but\nledger-db has a single primary and both read replicas in us-east1. The managed failover controller only\nfails over within a region.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S2",
+     "chunk_id": "postmortem-2024-07-region-outage@v1#0",
+     "source_id": "postmortem-2024-07-region-outage@v1",
+     "title": "Postmortem INC-1247 us-east1 regional outage",
+     "section_path": [
+      "Postmortem INC-1247: Full payments outage during us-east1 incident",
+      "Summary"
+     ],
+     "doc_date": "2024-07-22 00:00:00+00:00",
+     "passage": "Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Summary\n\nOn 2024-07-19 a Google Cloud networking incident degraded us-east1 for 4 hours. The payments platform was\ncompletely unavailable for 3 hours 12 minutes. Severity: SEV1.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S6",
+     "chunk_id": null,
+     "source_id": "incidents@v1",
+     "title": "Aggregation over structured records",
+     "section_path": [
+      "{\"match\": {}, \"group_by\": \"root_cause_category\", \"metric\": \"count\", \"limit\": 10}"
+     ],
+     "doc_date": null,
+     "passage": "[{\"group\": \"database\", \"value\": 4, \"chunk_ids\": [\"incidents@v1#1\", \"incidents@v1#4\", \"incidents@v1#7\", \"incidents@v1#11\"]}, {\"group\": \"capacity\", \"value\": 2, \"chunk_ids\": [\"incidents@v1#3\", \"incidents@v1#9\"]}, {\"group\": \"data-pipeline\", \"value\": 2, \"chunk_ids\": [\"incidents@v1#2\", \"incidents@v1#10\"]}, {\"group\": \"deploy\", \"value\": 2, \"chunk_ids\": [\"incidents@v1#0\", \"incidents@v1#6\"]}, {\"group\": \"dependency\", \"value\": 1, \"chunk_ids\": [\"incidents@v1#5\"]}, {\"group\": \"regional-outage\", \"value\": 1, \"chunk_ids\": [\"incidents@v1#8\"]}]",
+     "supporting_chunk_ids": [
+      "incidents@v1#1",
+      "incidents@v1#4",
+      "incidents@v1#7",
+      "incidents@v1#11",
+      "incidents@v1#3",
+      "incidents@v1#9",
+      "incidents@v1#2",
+      "incidents@v1#10",
+      "incidents@v1#0",
+      "incidents@v1#6",
+      "incidents@v1#5",
+      "incidents@v1#8"
+     ]
+    },
+    {
+     "label": "S13",
+     "chunk_id": "security-review-2024@v1#2",
+     "source_id": "security-review-2024@v1",
+     "title": "Internal Security Review 2024",
+     "section_path": [
+      "Internal Security Review 2024: Payments Platform",
+      "Findings",
+      "SEC-02 Admin console without MFA (High)"
+     ],
+     "doc_date": "2024-09-10 00:00:00+00:00",
+     "passage": "Internal Security Review 2024: Payments Platform \u203a Findings \u203a SEC-02 Admin console without MFA (High)\n\nThe legacy merchant admin console uses username and password only. It is reachable from the public internet.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S12",
+     "chunk_id": "security-review-2024@v1#3",
+     "source_id": "security-review-2024@v1",
+     "title": "Internal Security Review 2024",
+     "section_path": [
+      "Internal Security Review 2024: Payments Platform",
+      "Findings",
+      "SEC-03 Outdated dependency (Medium)"
+     ],
+     "doc_date": "2024-09-10 00:00:00+00:00",
+     "passage": "Internal Security Review 2024: Payments Platform \u203a Findings \u203a SEC-03 Outdated dependency (Medium)\n\nPAY-API depends on an HTTP library version with a published request-smuggling vulnerability (CVE-2023-44487\nclass issue). Upgrade is planned for Q4.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S7",
+     "chunk_id": "arch-overview@v1#3",
+     "source_id": "arch-overview@v1",
+     "title": "Payments Platform Architecture Overview",
+     "section_path": [
+      "Payments Platform Architecture Overview",
+      "4. Availability and Disaster Recovery"
+     ],
+     "doc_date": "2024-05-02 00:00:00+00:00",
+     "passage": "Payments Platform Architecture Overview \u203a 4. Availability and Disaster Recovery\n\nThe platform is deployed **multi-region active-active** across us-east1 and us-west1. Global load balancing\nroutes traffic to the healthy region. The stated recovery time objective (RTO) is 15 minutes and the recovery\npoint objective (RPO) is 1 minute.\n\nDatabase failover for ledger-db is described as automatic within 60 seconds using the managed failover\ncontroller.",
+     "supporting_chunk_ids": null
+    }
+   ],
+   "conflicts": [
+    {
+     "description": "Disaster recovery posture regarding multi-region active-active deployment versus single-region data tier dependencies.",
+     "side_a": [
+      "S7"
+     ],
+     "side_b": [
+      "S3"
+     ]
+    }
+   ],
+   "discovery": [],
+   "plan": [
+    {
+     "id": "Q1",
+     "question": "What are the most frequent causes of payment platform outages and failures based on past incidents?",
+     "specialist": "reliability",
+     "kinds": [
+      "postmortem",
+      "records",
+      "runbook"
+     ],
+     "use_records": true
+    },
+    {
+     "id": "Q2",
+     "question": "What are the disaster recovery and failover mechanisms currently implemented for the payments pipeline?",
+     "specialist": "reliability",
+     "kinds": [
+      "architecture",
+      "runbook"
+     ],
+     "use_records": false
+    },
+    {
+     "id": "Q3",
+     "question": "Are there existing vulnerabilities or auth gaps in the payment processing codebase?",
+     "specialist": "security",
+     "kinds": [
+      "security",
+      "repo"
+     ],
+     "use_records": false
+    }
+   ],
+   "memories_used": [],
+   "verification": {
+    "results": [
+     {
+      "claim_id": "C1",
+      "supported": true,
+      "reason": "S2 states that the payments platform was completely unavailable for 3 hours 12 minutes during the us-east1 networking incident."
+     },
+     {
+      "claim_id": "C2",
+      "supported": true,
+      "reason": "S3 states that the platform is effectively single-region for its data tier, with ledger-db having a single primary and both read replicas in us-east1."
+     },
+     {
+      "claim_id": "C3",
+      "supported": true,
+      "reason": "S6 shows database as the group with the highest value (4 occurrences), corresponding to the most frequent root cause in the incident register."
+     },
+     {
+      "claim_id": "C4",
+      "supported": true,
+      "reason": "S13 states that the legacy merchant admin console uses username and password only and is reachable from the public internet."
+     },
+     {
+      "claim_id": "C5",
+      "supported": true,
+      "reason": "S12 states that PAY-API depends on an HTTP library version with a published request-smuggling vulnerability."
+     }
+    ],
+    "unsupported": [],
+    "route": "write",
+    "attempt": 1
+   },
+   "tool_log": [
+    {
+     "subquestion": "Q1",
+     "step": 1,
+     "thought": "I need to find the most frequent causes of payment platform outages and failures based on past incidents and postmortems.",
+     "action": "hybrid_search",
+     "observation": "S1 postmortem-2024-03-pay-api@v1 Postmortem INC-1182: PAY-API timeouts with ERR-4471 > Summary: 'Postmortem INC-1182: PAY-API timeouts with ERR-4471 \u203a Summary\\n\\nOn 2024-03-15 between 18:02 and 18:49 UTC, 31% of partner payment requests to PAY-API failed with'; S2 postmortem-2024-07-region-outage@v1 Postmortem INC-1247: Full payments outage during us-east1 incident > Summary: 'Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Summary\\n\\nOn 2024-07-19 a Google Cloud networking "
+    },
+    {
+     "subquestion": "Q1",
+     "step": 2,
+     "thought": "I will query the incident records to aggregate root cause categories and find the most frequent causes of payment platform outages.",
+     "action": "query_records",
+     "observation": "S6 aggregate for spec {\"match\": {}, \"group_by\": \"root_cause_category\", \"metric\": \"count\", \"limit\": 10}: [{\"group\": \"database\", \"value\": 4, \"chunk_ids\": [\"incidents@v1#1\", \"incidents@v1#4\", \"incidents@v1#7\", \"incidents@v1#11\"]}, {\"group\": \"capacity\", \"value\": 2, \"chunk_ids\": [\"incidents@v1#3\", \"incidents@v1#9\"]}, {\"group\": \"data-pipeline\", \"value\": 2, \"chunk_ids\": [\"incidents@v1#2\", \"incidents@v1#10\"]}"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 1,
+     "thought": "I need to search for disaster recovery and failover mechanisms for the payments pipeline using architecture and runbook documents.",
+     "action": "hybrid_search",
+     "observation": "S7 arch-overview@v1 Payments Platform Architecture Overview > 4. Availability and Disaster Recovery: 'Payments Platform Architecture Overview \u203a 4. Availability and Disaster Recovery\\n\\nThe platform is deployed **multi-region active-active** across us-east1 and us-'; S8 arch-overview@v1 Payments Platform Architecture Overview > 1. Purpose: 'Payments Platform Architecture Overview \u203a 1. Purpose\\n\\nThis document describes the target and current architecture of the Acme payments platform, which proce"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 1,
+     "thought": "I need to search for vulnerabilities or authentication gaps in the payment processing codebase, specifically looking at security and repository sources.",
+     "action": "hybrid_search",
+     "observation": "S12 security-review-2024@v1 Internal Security Review 2024: Payments Platform > Findings > SEC-03 Outdated dependency (Medium): 'Internal Security Review 2024: Payments Platform \u203a Findings \u203a SEC-03 Outdated dependency (Medium)\\n\\nPAY-API depends on an HTTP library version with a published r'; S13 security-review-2024@v1 Internal Security Review 2024: Payments Platform > Findings > SEC-02 Admin console without MFA (High): 'Internal Security Review 2024: Payments Platform \u203a Findings \u203a SEC-02 Admin "
+    }
+   ],
+   "evidence_count": 16,
+   "retrieval_backends": {
+    "vector": "python-cosine",
+    "text": "python-bm25"
+   },
+   "metrics": {
+    "latency_ms": 305790.8,
+    "llm_calls": 11,
+    "tool_calls": 4,
+    "tokens_in": 10758,
+    "tokens_out": 2123,
+    "output_tokens_per_sec": 7.0,
+    "cost_usd": 0.008535,
+    "models": [
+     "gemini-3.5-flash-lite"
+    ]
+   },
+   "spans": [
+    {
+     "name": "recall_memory",
+     "parent": null,
+     "ms": 434.4,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "supervisor",
+     "parent": null,
+     "ms": 47879.1,
+     "llm_calls": 1,
+     "tokens_in": 231,
+     "tokens_out": 196,
+     "llm_ms": 47879.036400001496,
+     "cost_usd": 0.000559,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 444.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "payment platform outages causes failures root cause category",
+        "kinds": [
+         "postmortem",
+         "records",
+         "runbook"
+        ]
+       },
+       "results": 5,
+       "ms": 444.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:query_records",
+     "parent": "researcher",
+     "ms": 27.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "query_records",
+       "args": {
+        "match": {},
+        "group_by": "root_cause_category",
+        "metric": "count",
+        "limit": 10
+       },
+       "results": 6,
+       "ms": 27.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 470.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "disaster recovery failover payments pipeline",
+        "kinds": [
+         "architecture",
+         "runbook"
+        ]
+       },
+       "results": 5,
+       "ms": 470.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 662.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "vulnerabilities authentication gaps payment processing codebase",
+        "kinds": [
+         "security",
+         "repo"
+        ]
+       },
+       "results": 5,
+       "ms": 662.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "researcher",
+     "parent": null,
+     "ms": 145262.8,
+     "llm_calls": 7,
+     "tokens_in": 5148,
+     "tokens_out": 646,
+     "llm_ms": 143655.50200012513,
+     "cost_usd": 0.003159,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "analyst",
+     "parent": null,
+     "ms": 2555.8,
+     "llm_calls": 1,
+     "tokens_in": 2484,
+     "tokens_out": 456,
+     "llm_ms": 2555.611499992665,
+     "cost_usd": 0.001885,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "verifier",
+     "parent": null,
+     "ms": 47820.6,
+     "llm_calls": 1,
+     "tokens_in": 2484,
+     "tokens_out": 305,
+     "llm_ms": 47820.48519997625,
+     "cost_usd": 0.001508,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "writer",
+     "parent": null,
+     "ms": 61822.4,
+     "llm_calls": 1,
+     "tokens_in": 411,
+     "tokens_out": 520,
+     "llm_ms": 61822.16080004582,
+     "cost_usd": 0.001423,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    }
+   ],
+   "cache": {
+    "hit": false
+   },
+   "question": "What are the top reliability risks of the payments platform? Prioritise by evidence."
+  },
+  {
+   "title": "Conflicting sources",
+   "run_id": "c004012b27f5",
+   "status": "answered",
+   "answer": "**Answer**\n\nThe payments platform cannot survive a regional outage because its data tier is effectively single-region, lacking cross-region replicas despite documentation claiming active-active status [S1][S11][S12]. Additionally, the disaster-recovery runbook relies on a decommissioned replica host, which will cause manual failover attempts to fail during an incident [S6][S12]. \n\n**Risk register**\n\n| Risk | Severity | Evidence | Recommendation |\n| :--- | :--- | :--- | :--- |\n| Single-region data tier vulnerability | High | The payments platform data tier relies on a single primary and read replicas strictly in us-east1 with no cross-region replica [S1][S11][S12]. | Provision cross-region database replicas and re-architect the data tier for true multi-region active-active capability. |\n| Outdated disaster-recovery runbook | High | The DR runbook references a decommissioned replica host, causing manual failover attempts to fail [S6][S12]. | Immediately update the DR runbook to reference active hosts and test manual failover procedures. |\n| Request-smuggling vulnerability in PAY-API | Medium | PAY-API depends on an HTTP library version containing a published request-smuggling vulnerability (upgrade planned for Q4) [S13]. | Prioritize and accelerate the HTTP library upgrade ahead of the Q4 schedule. |\n\n**Sources disagree**\n\nThere is a conflict regarding whether the platform is truly multi-region active-active or single-region for data [S1][S11].\n\n**Open questions**\n\n* Are critical payment dependencies and third-party integrations (outside of the internal data tier and services) capable of multi-region failover?",
+   "citations": [
+    {
+     "label": "S1",
+     "chunk_id": "arch-overview@v1#3",
+     "source_id": "arch-overview@v1",
+     "title": "Payments Platform Architecture Overview",
+     "section_path": [
+      "Payments Platform Architecture Overview",
+      "4. Availability and Disaster Recovery"
+     ],
+     "doc_date": "2024-05-02 00:00:00+00:00",
+     "passage": "Payments Platform Architecture Overview \u203a 4. Availability and Disaster Recovery\n\nThe platform is deployed **multi-region active-active** across us-east1 and us-west1. Global load balancing\nroutes traffic to the healthy region. The stated recovery time objective (RTO) is 15 minutes and the recovery\npoint objective (RPO) is 1 minute.\n\nDatabase failover for ledger-db is described as automatic within 60 seconds using the managed failover\ncontroller.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S11",
+     "chunk_id": "postmortem-2024-07-region-outage@v1#2",
+     "source_id": "postmortem-2024-07-region-outage@v1",
+     "title": "Postmortem INC-1247 us-east1 regional outage",
+     "section_path": [
+      "Postmortem INC-1247: Full payments outage during us-east1 incident",
+      "Root Cause"
+     ],
+     "doc_date": "2024-07-22 00:00:00+00:00",
+     "passage": "Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Root Cause\n\nThe platform is effectively single-region for its data tier. Stateless services run in both regions, but\nledger-db has a single primary and both read replicas in us-east1. The managed failover controller only\nfails over within a region.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S12",
+     "chunk_id": "postmortem-2024-07-region-outage@v1#1",
+     "source_id": "postmortem-2024-07-region-outage@v1",
+     "title": "Postmortem INC-1247 us-east1 regional outage",
+     "section_path": [
+      "Postmortem INC-1247: Full payments outage during us-east1 incident",
+      "Timeline"
+     ],
+     "doc_date": "2024-07-22 00:00:00+00:00",
+     "passage": "Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Timeline\n\n- 09:14 UTC us-east1 network degradation begins; ledger-service writes start failing.\n- 09:20 Global load balancer shifts PAY-API traffic to us-west1 as designed.\n- 09:21 us-west1 PAY-API returns errors: ledger-service in us-west1 cannot reach the ledger-db primary, which\n  only exists in us-east1. There is no cross-region replica of ledger-db.\n- 10:05 Team attempts the manual ledger-db failover runbook; the runbook references a decommissioned\n  replica host and fails.\n- 12:26 us-east1 recovers; payments resume.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S6",
+     "chunk_id": "runbook-ledger-failover@v1#1",
+     "source_id": "runbook-ledger-failover@v1",
+     "title": "Runbook ledger-db manual failover",
+     "section_path": [
+      "Runbook: ledger-db manual failover",
+      "Steps"
+     ],
+     "doc_date": "2022-11-08 00:00:00+00:00",
+     "passage": "Runbook: ledger-db manual failover \u203a Steps\n\n1. Freeze writes by scaling ledger-service to zero replicas.\n2. Promote replica host ledger-db-replica-2.us-east1 using the promote command.\n3. Update the ledger-db DNS record to the promoted host.\n4. Scale ledger-service back up and verify replication lag is zero.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S13",
+     "chunk_id": "security-review-2024@v1#3",
+     "source_id": "security-review-2024@v1",
+     "title": "Internal Security Review 2024",
+     "section_path": [
+      "Internal Security Review 2024: Payments Platform",
+      "Findings",
+      "SEC-03 Outdated dependency (Medium)"
+     ],
+     "doc_date": "2024-09-10 00:00:00+00:00",
+     "passage": "Internal Security Review 2024: Payments Platform \u203a Findings \u203a SEC-03 Outdated dependency (Medium)\n\nPAY-API depends on an HTTP library version with a published request-smuggling vulnerability (CVE-2023-44487\nclass issue). Upgrade is planned for Q4.",
+     "supporting_chunk_ids": null
+    }
+   ],
+   "conflicts": [
+    {
+     "description": "Disagreement regarding whether the platform is truly multi-region active-active or single-region for data.",
+     "side_a": [
+      "S1"
+     ],
+     "side_b": [
+      "S11"
+     ]
+    }
+   ],
+   "discovery": [],
+   "plan": [
+    {
+     "id": "Q1",
+     "question": "What is the multi-region architecture and database replication strategy for the payments platform?",
+     "specialist": "reliability",
+     "kinds": [
+      "architecture",
+      "runbook"
+     ],
+     "use_records": false
+    },
+    {
+     "id": "Q2",
+     "question": "How are failover procedures tested and what are the documented RTO and RPO metrics for regional outages?",
+     "specialist": "reliability",
+     "kinds": [
+      "postmortem",
+      "runbook",
+      "records"
+     ],
+     "use_records": true
+    },
+    {
+     "id": "Q3",
+     "question": "Are critical payment dependencies and third-party integrations capable of multi-region failover?",
+     "specialist": "scalability",
+     "kinds": [
+      "architecture",
+      "security"
+     ],
+     "use_records": false
+    }
+   ],
+   "memories_used": [],
+   "verification": {
+    "results": [
+     {
+      "claim_id": "C1",
+      "supported": true,
+      "reason": "S11 states that the platform is effectively single-region for its data tier with ledger-db having a single primary and read replicas in us-east1, and S12 confirms there is no cross-region replica."
+     },
+     {
+      "claim_id": "C2",
+      "supported": true,
+      "reason": "S12 explicitly mentions that at 10:05 the team attempted the manual failover runbook and it failed because it referenced a decommissioned replica host."
+     },
+     {
+      "claim_id": "C3",
+      "supported": false,
+      "reason": "S10 lists creating a cross-region replica as not started and blocked on budget approval, and correcting documentation as not started, but it lists quarterly DR failover game days as simply not started without stating they are blocked on budget approval."
+     },
+     {
+      "claim_id": "C4",
+      "supported": true,
+      "reason": "S13 states that PAY-API depends on an HTTP library version containing a published request-smuggling vulnerability, with the upgrade planned for Q4."
+     }
+    ],
+    "unsupported": [
+     "Disaster recovery failover game days and action items to create a cross-region replica or correct architecture documentation are currently not started and blocked on budget approval."
+    ],
+    "route": "write",
+    "attempt": 2
+   },
+   "tool_log": [
+    {
+     "subquestion": "Q1",
+     "step": 1,
+     "thought": "I will search the architecture and runbook documents for information regarding the multi-region architecture and database replication strategy for the payments platform.",
+     "action": "hybrid_search",
+     "observation": "S1 arch-overview@v1 Payments Platform Architecture Overview > 4. Availability and Disaster Recovery: 'Payments Platform Architecture Overview \u203a 4. Availability and Disaster Recovery\\n\\nThe platform is deployed **multi-region active-active** across us-east1 and us-'; S2 arch-overview@v1 Payments Platform Architecture Overview > 1. Purpose: 'Payments Platform Architecture Overview \u203a 1. Purpose\\n\\nThis document describes the target and current architecture of the Acme payments platform, which proce"
+    },
+    {
+     "subquestion": "Q1",
+     "step": 2,
+     "thought": "I need to expand context or search more specifically about the database replication strategy in the payments platform architecture.",
+     "action": "expand_context",
+     "observation": "no new passages - neighbours are already in the evidence; search a different angle or finish"
+    },
+    {
+     "subquestion": "Q1",
+     "step": 3,
+     "thought": "I will expand context on chunk S3 to get details about the database replication strategy for the payments platform.",
+     "action": "expand_context",
+     "observation": "no new passages - neighbours are already in the evidence; search a different angle or finish"
+    },
+    {
+     "subquestion": "Q1",
+     "step": 4,
+     "thought": "I will search specifically for database replication strategy in the architecture documents.",
+     "action": "hybrid_search",
+     "observation": "S6 runbook-ledger-failover@v1 Runbook: ledger-db manual failover > Steps: 'Runbook: ledger-db manual failover \u203a Steps\\n\\n1. Freeze writes by scaling ledger-service to zero replicas.\\n2. Promote replica host ledger-db-replica-2.us-east1 us'; S7 runbook-ledger-failover@v1 Runbook: ledger-db manual failover > Last tested: 'Runbook: ledger-db manual failover \u203a Last tested\\n\\nThis runbook was last exercised on 2022-11-08 in staging.'; S8 runbook-ledger-failover@v1 Runbook: ledger-db manual failover >"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 1,
+     "thought": "I need to search for failover procedures, testing frequency, and documented RTO and RPO metrics for regional outages across postmortems, runbooks, and records.",
+     "action": "hybrid_search",
+     "observation": "S9 postmortem-2024-07-region-outage@v1 Postmortem INC-1247: Full payments outage during us-east1 incident > Contributing Factors: 'Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Contributing Factors\\n\\n- The disaster-recovery runbook had not been tested since 2022.\\n- The'; S10 postmortem-2024-07-region-outage@v1 Postmortem INC-1247: Full payments outage during us-east1 incident > Action Items: 'Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Action Ite"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 2,
+     "thought": "I need to search for disaster recovery runbooks and documented RTO and RPO metrics.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 3,
+     "thought": "I will search for disaster recovery runbooks to find RTO and RPO metrics and testing procedures.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 4,
+     "thought": "I will search for RTO and RPO metrics and failover runbooks using a broader query.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 1,
+     "thought": "Search for multi-region failover capabilities of critical payment dependencies and third-party integrations.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 2,
+     "thought": "Let's search for payment dependencies and multi-region failover using different terms like payment-gateway, third-party, or region.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 3,
+     "thought": "Let's try searching specifically for payment dependencies or third-party integrations in the architecture documents.",
+     "action": "hybrid_search",
+     "observation": "S13 security-review-2024@v1 Internal Security Review 2024: Payments Platform > Findings > SEC-03 Outdated dependency (Medium): 'Internal Security Review 2024: Payments Platform \u203a Findings \u203a SEC-03 Outdated dependency (Medium)\\n\\nPAY-API depends on an HTTP library version with a published r'; S14 security-review-2024@v1 Internal Security Review 2024: Payments Platform > Scope: 'Internal Security Review 2024: Payments Platform \u203a Scope\\n\\nPayments services, CI/CD pipeline, cloud IAM and secrets han"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 4,
+     "thought": "Let's search for architecture documents regarding payment dependencies and multi-region failover or third-party integrations.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "G1",
+     "step": 1,
+     "thought": "I need to search for quarterly disaster recovery (DR) failover game days and check if they are blocked on budget approval.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "G1",
+     "step": 2,
+     "thought": "Searching for DR failover game days and budget approval.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "G1",
+     "step": 3,
+     "thought": "I will search for disaster recovery failover game days and budget constraints using specific keywords.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "G1",
+     "step": 4,
+     "thought": "I will search for disaster recovery and budget approval to find relevant information regarding DR failover game days.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    }
+   ],
+   "evidence_count": 14,
+   "retrieval_backends": {
+    "vector": "python-cosine",
+    "text": "python-bm25"
+   },
+   "metrics": {
+    "latency_ms": 238442.3,
+    "llm_calls": 22,
+    "tool_calls": 16,
+    "tokens_in": 19767,
+    "tokens_out": 3293,
+    "output_tokens_per_sec": 14.3,
+    "cost_usd": 0.014163,
+    "models": [
+     "gemini-3.5-flash-lite"
+    ]
+   },
+   "spans": [
+    {
+     "name": "recall_memory",
+     "parent": null,
+     "ms": 420.0,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "supervisor",
+     "parent": null,
+     "ms": 9788.2,
+     "llm_calls": 1,
+     "tokens_in": 226,
+     "tokens_out": 205,
+     "llm_ms": 9788.135799986776,
+     "cost_usd": 0.00058,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 648.1,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "multi-region architecture database replication payments platform",
+        "kinds": [
+         "architecture",
+         "runbook"
+        ]
+       },
+       "results": 5,
+       "ms": 648.1
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:expand_context",
+     "parent": "researcher",
+     "ms": 0.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "expand_context",
+       "args": {
+        "chunk_id": "S3"
+       },
+       "results": 0,
+       "ms": 0.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:expand_context",
+     "parent": "researcher",
+     "ms": 0.1,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "expand_context",
+       "args": {
+        "chunk_id": "arch-overview@v1:3"
+       },
+       "results": 0,
+       "ms": 0.1
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 419.0,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "database replication strategy multi-region ledger-db",
+        "kinds": [
+         "architecture",
+         "runbook"
+        ]
+       },
+       "results": 5,
+       "ms": 418.9
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 407.7,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "failover procedure testing RTO RPO regional outage",
+        "kinds": [
+         "postmortem",
+         "runbook",
+         "records"
+        ]
+       },
+       "results": 5,
+       "ms": 407.7
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 633.9,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "failover procedure RTO RPO regional outage runbook",
+        "kinds": [
+         "runbook",
+         "postmortem"
+        ]
+       },
+       "results": 5,
+       "ms": 633.9
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 425.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "disaster recovery RTO RPO failover runbook",
+        "kinds": [
+         "runbook",
+         "postmortem"
+        ]
+       },
+       "results": 5,
+       "ms": 425.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 419.7,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "RTO RPO disaster recovery failover",
+        "kinds": [
+         "runbook",
+         "postmortem",
+         "records"
+        ]
+       },
+       "results": 5,
+       "ms": 419.7
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 664.9,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "payment dependencies third-party integrations multi-region failover",
+        "kinds": [
+         "architecture",
+         "security"
+        ]
+       },
+       "results": 5,
+       "ms": 664.9
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 408.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "payment dependencies multi-region failover third-party",
+        "kinds": [
+         "architecture",
+         "security"
+        ]
+       },
+       "results": 5,
+       "ms": 408.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 432.1,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "payment dependency third-party integration region",
+        "kinds": [
+         "architecture",
+         "security"
+        ]
+       },
+       "results": 5,
+       "ms": 432.1
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 420.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "payment multi-region failover third-party",
+        "kinds": [
+         "architecture",
+         "security"
+        ]
+       },
+       "results": 5,
+       "ms": 420.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "researcher",
+     "parent": null,
+     "ms": 131255.9,
+     "llm_calls": 12,
+     "tokens_in": 8334,
+     "tokens_out": 1020,
+     "llm_ms": 126373.2977999025,
+     "cost_usd": 0.00505,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "analyst",
+     "parent": null,
+     "ms": 9179.8,
+     "llm_calls": 1,
+     "tokens_in": 2213,
+     "tokens_out": 393,
+     "llm_ms": 9179.639199981466,
+     "cost_usd": 0.001646,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "verifier",
+     "parent": null,
+     "ms": 3182.3,
+     "llm_calls": 1,
+     "tokens_in": 2182,
+     "tokens_out": 252,
+     "llm_ms": 3182.1105999988504,
+     "cost_usd": 0.001285,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 646.7,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "quarterly DR failover game days budget approval",
+        "kinds": []
+       },
+       "results": 5,
+       "ms": 646.7
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 453.5,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "quarterly DR failover game days budget approval",
+        "kinds": []
+       },
+       "results": 5,
+       "ms": 453.5
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 651.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "disaster recovery DR failover game days budget approval",
+        "kinds": []
+       },
+       "results": 5,
+       "ms": 651.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 672.8,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "disaster recovery failover budget approval game days",
+        "kinds": []
+       },
+       "results": 5,
+       "ms": 672.8
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "researcher",
+     "parent": null,
+     "ms": 47760.7,
+     "llm_calls": 4,
+     "tokens_in": 2010,
+     "tokens_out": 302,
+     "llm_ms": 45334.95559997391,
+     "cost_usd": 0.001358,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "analyst",
+     "parent": null,
+     "ms": 7053.4,
+     "llm_calls": 1,
+     "tokens_in": 2213,
+     "tokens_out": 431,
+     "llm_ms": 7053.3106999937445,
+     "cost_usd": 0.001741,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "verifier",
+     "parent": null,
+     "ms": 20898.9,
+     "llm_calls": 1,
+     "tokens_in": 2225,
+     "tokens_out": 318,
+     "llm_ms": 20898.77480000723,
+     "cost_usd": 0.001463,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "writer",
+     "parent": null,
+     "ms": 8894.9,
+     "llm_calls": 1,
+     "tokens_in": 364,
+     "tokens_out": 372,
+     "llm_ms": 8894.831900019199,
+     "cost_usd": 0.001039,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    }
+   ],
+   "cache": {
+    "hit": false
+   },
+   "question": "Is the payments platform really able to survive a regional outage?"
+  },
+  {
+   "title": "Structured records",
+   "run_id": "191b31f381ab",
+   "status": "answered",
+   "answer": "### Answer\nIn 2024, the `ledger-service` experienced the highest number of SEV1 and SEV2 incidents, totaling 5 incidents [S1]. The primary root cause category across these incidents was Database issues, accounting for 4 occurrences [S2]. \n\n### Risk register\n\n| Risk | Severity | Evidence | Recommendation |\n| :--- | :--- | :--- | :--- |\n| Database-related failures driving critical incidents in `ledger-service` | High | `ledger-service` recorded 5 SEV1/SEV2 incidents in 2024 [S1], with Database identified as the most frequent root cause category (4 occurrences) [S2]. | Conduct a deep-dive review of `ledger-service` database interactions, connection pooling, and query performance to mitigate recurrence. |\n\n### Open questions\n- What specific root cause contributed to the remaining 1 incident for the `ledger-service` that was not categorized under Database issues?",
+   "citations": [
+    {
+     "label": "S1",
+     "chunk_id": null,
+     "source_id": "incidents@v1",
+     "title": "Aggregation over structured records",
+     "section_path": [
+      "{\"match\": {\"severity\": [\"SEV1\", \"SEV2\"], \"date\": {\"gte\": \"2024-01-01\", \"lte\": \"2024-12-31\"}}, \"group_by\": \"service\", \"metric\": \"count\", \"limit\": 10}"
+     ],
+     "doc_date": null,
+     "passage": "[{\"group\": \"ledger-service\", \"value\": 5, \"chunk_ids\": [\"incidents@v1#1\", \"incidents@v1#4\", \"incidents@v1#7\", \"incidents@v1#8\", \"incidents@v1#11\"]}, {\"group\": \"PAY-API\", \"value\": 3, \"chunk_ids\": [\"incidents@v1#3\", \"incidents@v1#5\", \"incidents@v1#9\"]}, {\"group\": \"fraud-scorer\", \"value\": 1, \"chunk_ids\": [\"incidents@v1#10\"]}]",
+     "supporting_chunk_ids": [
+      "incidents@v1#1",
+      "incidents@v1#4",
+      "incidents@v1#7",
+      "incidents@v1#8",
+      "incidents@v1#11",
+      "incidents@v1#3",
+      "incidents@v1#5",
+      "incidents@v1#9",
+      "incidents@v1#10"
+     ]
+    },
+    {
+     "label": "S2",
+     "chunk_id": null,
+     "source_id": "incidents@v1",
+     "title": "Aggregation over structured records",
+     "section_path": [
+      "{\"match\": {\"severity\": [\"SEV1\", \"SEV2\"], \"date\": {\"gte\": \"2024-01-01\", \"lte\": \"2024-12-31\"}}, \"group_by\": \"root_cause_category\", \"metric\": \"count\", \"limit\": 10}"
+     ],
+     "doc_date": null,
+     "passage": "[{\"group\": \"database\", \"value\": 4, \"chunk_ids\": [\"incidents@v1#1\", \"incidents@v1#4\", \"incidents@v1#7\", \"incidents@v1#11\"]}, {\"group\": \"capacity\", \"value\": 2, \"chunk_ids\": [\"incidents@v1#3\", \"incidents@v1#9\"]}, {\"group\": \"data-pipeline\", \"value\": 1, \"chunk_ids\": [\"incidents@v1#10\"]}, {\"group\": \"dependency\", \"value\": 1, \"chunk_ids\": [\"incidents@v1#5\"]}, {\"group\": \"regional-outage\", \"value\": 1, \"chunk_ids\": [\"incidents@v1#8\"]}]",
+     "supporting_chunk_ids": [
+      "incidents@v1#1",
+      "incidents@v1#4",
+      "incidents@v1#7",
+      "incidents@v1#11",
+      "incidents@v1#3",
+      "incidents@v1#9",
+      "incidents@v1#10",
+      "incidents@v1#5",
+      "incidents@v1#8"
+     ]
+    }
+   ],
+   "conflicts": [],
+   "discovery": [],
+   "plan": [
+    {
+     "id": "Q1",
+     "question": "Which service had the most SEV1 and SEV2 incidents in 2024?",
+     "specialist": "reliability",
+     "kinds": [
+      "postmortem",
+      "records"
+     ],
+     "use_records": true
+    },
+    {
+     "id": "Q2",
+     "question": "What were the root causes of the most frequent SEV1 and SEV2 incidents in 2024?",
+     "specialist": "reliability",
+     "kinds": [
+      "postmortem",
+      "runbook"
+     ],
+     "use_records": true
+    }
+   ],
+   "memories_used": [],
+   "verification": {
+    "results": [
+     {
+      "claim_id": "C1",
+      "supported": true,
+      "reason": "Evidence S1 shows ledger-service has a value of 5 for SEV1 and SEV2 incidents in 2024, which is the highest count."
+     },
+     {
+      "claim_id": "C2",
+      "supported": true,
+      "reason": "Evidence S2 shows database is the root cause category with a value of 4 for SEV1 and SEV2 incidents in 2024, which is the highest frequency."
+     }
+    ],
+    "unsupported": [],
+    "route": "write",
+    "attempt": 1
+   },
+   "tool_log": [
+    {
+     "subquestion": "Q1",
+     "step": 1,
+     "thought": "I will query the records to find the count of SEV1 and SEV2 incidents grouped by service in 2024.",
+     "action": "query_records",
+     "observation": "S1 aggregate for spec {\"match\": {\"severity\": [\"SEV1\", \"SEV2\"], \"date\": {\"gte\": \"2024-01-01\", \"lte\": \"2024-12-31\"}}, \"group_by\": \"service\", \"metric\": \"count\", \"limit\": 10}: [{\"group\": \"ledger-service\", \"value\": 5, \"chunk_ids\": [\"incidents@v1#1\", \"incidents@v1#4\", \"incidents@v1#7\", \"incidents@v1#8\", \"incidents@v1#11\"]}, {\"group\": \"PAY-API\", \"value\": 3, \"chunk_ids\": [\"incidents@v1#3\", \"incidents@v1#5\", \"incidents@v1#9\"]}, {\"group\": \"fraud-scorer\", \"value\": 1, \"chunk_ids\""
+    },
+    {
+     "subquestion": "Q2",
+     "step": 1,
+     "thought": "I need to query records to find the most frequent SEV1 and SEV2 incidents in 2024 and their root cause categories.",
+     "action": "query_records",
+     "observation": "S2 aggregate for spec {\"match\": {\"severity\": [\"SEV1\", \"SEV2\"], \"date\": {\"gte\": \"2024-01-01\", \"lte\": \"2024-12-31\"}}, \"group_by\": \"root_cause_category\", \"metric\": \"count\", \"limit\": 10}: [{\"group\": \"database\", \"value\": 4, \"chunk_ids\": [\"incidents@v1#1\", \"incidents@v1#4\", \"incidents@v1#7\", \"incidents@v1#11\"]}, {\"group\": \"capacity\", \"value\": 2, \"chunk_ids\": [\"incidents@v1#3\", \"incidents@v1#9\"]}, {\"group\": \"data-pipeline\", \"value\": 1, \"chunk_ids\": [\"incidents@v1#10\"]}, {\"group\": \"depen"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 2,
+     "thought": "I need to check the remaining root cause categories and search postmortems for SEV1 and SEV2 incidents to get detailed root causes.",
+     "action": "hybrid_search",
+     "observation": "S3 postmortem-2024-07-region-outage@v1 Postmortem INC-1247: Full payments outage during us-east1 incident > Root Cause: 'Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Root Cause\\n\\nThe platform is effectively single-region for its data tier. Stateless services'; S4 postmortem-2024-07-region-outage@v1 Postmortem INC-1247: Full payments outage during us-east1 incident > Summary: 'Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Summary\\n\\nOn 2024-07-19 a "
+    }
+   ],
+   "evidence_count": 7,
+   "retrieval_backends": {
+    "vector": "python-cosine",
+    "text": "python-bm25"
+   },
+   "metrics": {
+    "latency_ms": 56183.4,
+    "llm_calls": 9,
+    "tool_calls": 3,
+    "tokens_in": 7207,
+    "tokens_out": 1327,
+    "output_tokens_per_sec": 24.1,
+    "cost_usd": 0.00548,
+    "models": [
+     "gemini-3.5-flash-lite"
+    ]
+   },
+   "spans": [
+    {
+     "name": "recall_memory",
+     "parent": null,
+     "ms": 628.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "supervisor",
+     "parent": null,
+     "ms": 3693.1,
+     "llm_calls": 1,
+     "tokens_in": 240,
+     "tokens_out": 114,
+     "llm_ms": 3693.055799987633,
+     "cost_usd": 0.000357,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:query_records",
+     "parent": "researcher",
+     "ms": 28.3,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "query_records",
+       "args": {
+        "match": {
+         "severity": [
+          "SEV1",
+          "SEV2"
+         ],
+         "date": {
+          "gte": "2024-01-01",
+          "lte": "2024-12-31"
+         }
+        },
+        "group_by": "service",
+        "metric": "count",
+        "limit": 10
+       },
+       "results": 3,
+       "ms": 28.3
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:query_records",
+     "parent": "researcher",
+     "ms": 34.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "query_records",
+       "args": {
+        "match": {
+         "severity": [
+          "SEV1",
+          "SEV2"
+         ],
+         "date": {
+          "gte": "2024-01-01",
+          "lte": "2024-12-31"
+         }
+        },
+        "group_by": "root_cause_category",
+        "metric": "count",
+        "limit": 10
+       },
+       "results": 5,
+       "ms": 34.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 449.4,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "SEV1 SEV2 root cause postmortem database capacity",
+        "kinds": [
+         "postmortem",
+         "runbook"
+        ]
+       },
+       "results": 5,
+       "ms": 449.4
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "researcher",
+     "parent": null,
+     "ms": 40160.0,
+     "llm_calls": 5,
+     "tokens_in": 3597,
+     "tokens_out": 664,
+     "llm_ms": 39645.508200046606,
+     "cost_usd": 0.002739,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "analyst",
+     "parent": null,
+     "ms": 5076.7,
+     "llm_calls": 1,
+     "tokens_in": 1598,
+     "tokens_out": 186,
+     "llm_ms": 5076.587399991695,
+     "cost_usd": 0.000944,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "verifier",
+     "parent": null,
+     "ms": 1616.9,
+     "llm_calls": 1,
+     "tokens_in": 1499,
+     "tokens_out": 154,
+     "llm_ms": 1616.8686000164598,
+     "cost_usd": 0.000835,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "writer",
+     "parent": null,
+     "ms": 5000.8,
+     "llm_calls": 1,
+     "tokens_in": 273,
+     "tokens_out": 209,
+     "llm_ms": 5000.62980002258,
+     "cost_usd": 0.000604,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    }
+   ],
+   "cache": {
+    "hit": false
+   },
+   "question": "Which service had the most SEV1 and SEV2 incidents in 2024, and what were the causes?"
+  },
+  {
+   "title": "Unanswerable",
+   "run_id": "208eb3d62697",
+   "status": "insufficient_evidence",
+   "answer": "**I can't answer this from the provided sources.** The available evidence contains internal security reviews and incident logs, but lacks any documentation or references regarding a SOC 2 Type II audit report, its results, or identified exceptions.\n\n**Discovery Pack**\n\n1. Has the organization completed a SOC 2 Type II audit within the last 12 months, and if so, what was the final opinion issued? - *Determines whether an independent auditor has formally validated the effectiveness of the security controls.* (ask: Chief Information Security Officer or Compliance Officer)\n2. Were there any qualified opinions, exceptions, or management letter comments noted in the most recent SOC 2 Type II report? - *Identifies specific control failures or operational weaknesses highlighted by the external auditor.* (ask: Director of Information Security or Compliance Manager)\n3. What is the planned remediation timeline for any exceptions or deficiencies identified during the SOC 2 Type II audit? - *Assesses the organization's responsiveness to audit findings and residual risk exposure.* (ask: Head of Engineering or GRC Lead)",
+   "citations": [],
+   "conflicts": [],
+   "discovery": [
+    {
+     "question": "Has the organization completed a SOC 2 Type II audit within the last 12 months, and if so, what was the final opinion issued?",
+     "why_it_matters": "Determines whether an independent auditor has formally validated the effectiveness of the security controls.",
+     "ask_whom": "Chief Information Security Officer or Compliance Officer"
+    },
+    {
+     "question": "Were there any qualified opinions, exceptions, or management letter comments noted in the most recent SOC 2 Type II report?",
+     "why_it_matters": "Identifies specific control failures or operational weaknesses highlighted by the external auditor.",
+     "ask_whom": "Director of Information Security or Compliance Manager"
+    },
+    {
+     "question": "What is the planned remediation timeline for any exceptions or deficiencies identified during the SOC 2 Type II audit?",
+     "why_it_matters": "Assesses the organization's responsiveness to audit findings and residual risk exposure.",
+     "ask_whom": "Head of Engineering or GRC Lead"
+    }
+   ],
+   "plan": [
+    {
+     "id": "Q1",
+     "question": "What were the findings, exceptions, or final conclusions of the recent SOC 2 Type II audit?",
+     "specialist": "security",
+     "kinds": [
+      "security",
+      "records"
+     ],
+     "use_records": false
+    }
+   ],
+   "memories_used": [],
+   "verification": {
+    "results": [],
+    "unsupported": [],
+    "route": "discovery",
+    "attempt": 1
+   },
+   "tool_log": [
+    {
+     "subquestion": "Q1",
+     "step": 1,
+     "thought": "I will search the security documents for findings, exceptions, or final conclusions of the recent SOC 2 Type II audit.",
+     "action": "hybrid_search",
+     "observation": "S1 security-review-2024@v1 Internal Security Review 2024: Payments Platform > Findings > SEC-04 Logging of card data (Low): 'Internal Security Review 2024: Payments Platform \u203a Findings \u203a SEC-04 Logging of card data (Low)\\n\\nDebug logging in fraud-scorer wrote truncated card numbers (fir'; S2 incidents@v1 Incident Register 2024 > row 2: 'Incident Register 2024 record 2: incident_id: INC-1131 | date: 2024-02-02 | service: ledger-service | severity: SEV2 | minutes_down: 52 | root_cause_category: d'"
+    },
+    {
+     "subquestion": "Q1",
+     "step": 2,
+     "thought": "I will search for SOC 2 Type II audit documents to find findings, exceptions, or final conclusions.",
+     "action": "hybrid_search",
+     "observation": "S6 security-review-2024@v1 Internal Security Review 2024: Payments Platform > Findings > SEC-02 Admin console without MFA (High): 'Internal Security Review 2024: Payments Platform \u203a Findings \u203a SEC-02 Admin console without MFA (High)\\n\\nThe legacy merchant admin console uses username and passw'"
+    },
+    {
+     "subquestion": "Q1",
+     "step": 3,
+     "thought": "I will search specifically for 'SOC 2' or 'Type II' in the security documents to find audit findings, exceptions, or conclusions.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    }
+   ],
+   "evidence_count": 6,
+   "retrieval_backends": {
+    "vector": "python-cosine",
+    "text": "python-bm25"
+   },
+   "metrics": {
+    "latency_ms": 121153.7,
+    "llm_calls": 7,
+    "tool_calls": 3,
+    "tokens_in": 5133,
+    "tokens_out": 829,
+    "output_tokens_per_sec": 6.9,
+    "cost_usd": 0.003612,
+    "models": [
+     "gemini-3.5-flash-lite"
+    ]
+   },
+   "spans": [
+    {
+     "name": "recall_memory",
+     "parent": null,
+     "ms": 415.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "supervisor",
+     "parent": null,
+     "ms": 8406.1,
+     "llm_calls": 1,
+     "tokens_in": 227,
+     "tokens_out": 84,
+     "llm_ms": 8406.011999992188,
+     "cost_usd": 0.000278,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 435.9,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "SOC 2 Type II audit findings exceptions conclusions",
+        "kinds": [
+         "security",
+         "records"
+        ]
+       },
+       "results": 5,
+       "ms": 435.9
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 397.9,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "SOC 2 Type II audit findings exceptions conclusions",
+        "kinds": [
+         "security"
+        ]
+       },
+       "results": 5,
+       "ms": 397.9
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 443.8,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "SOC 2 Type II audit findings exceptions conclusions",
+        "kinds": [
+         "security",
+         "records"
+        ]
+       },
+       "results": 5,
+       "ms": 443.8
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "researcher",
+     "parent": null,
+     "ms": 51785.2,
+     "llm_calls": 4,
+     "tokens_in": 3412,
+     "tokens_out": 401,
+     "llm_ms": 50505.68849995034,
+     "cost_usd": 0.002026,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "analyst",
+     "parent": null,
+     "ms": 3059.7,
+     "llm_calls": 1,
+     "tokens_in": 974,
+     "tokens_out": 55,
+     "llm_ms": 3059.5820999587886,
+     "cost_usd": 0.00043,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "verifier",
+     "parent": null,
+     "ms": 0.0,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "discovery",
+     "parent": null,
+     "ms": 57478.5,
+     "llm_calls": 1,
+     "tokens_in": 520,
+     "tokens_out": 289,
+     "llm_ms": 57478.48529997282,
+     "cost_usd": 0.000879,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    }
+   ],
+   "cache": {
+    "hit": false
+   },
+   "question": "What was the result of the SOC 2 Type II audit?"
+  }
+ ],
+ "memory": [
+  {
+   "run_id": "c3a3b182a414",
+   "status": "answered",
+   "answer": "**Answer**\nThe disaster-recovery risk for `ledger-db` is currently high due to its single-region data tier architecture in `us-east1` and a managed failover controller restricted to regional boundaries [S5]. This architectural vulnerability is compounded by operational rust, as the manual failover runbook for `ledger-db` has not been exercised since November 2022 and only in staging [S4]. Consequently, the system has already manifested database-related outages of 38 and 29 minutes within recent incident history [S6][S7].\n\n**Risk register**\n\n| Risk | Severity | Evidence | Recommendation |\n| :--- | :--- | :--- | :--- |\n| Single-region data tier vulnerability and restricted automated failover | High | The platform relies on a single primary and all read replicas in `us-east1`, with the managed failover controller operating strictly within the region [S5]. | Architect multi-region data replication and expand automated failover controllers across regions. |\n| Untested and outdated manual failover procedures | Medium | The manual failover runbook for `ledger-db` was last tested in staging on 2022-11-08 [S4]. | Schedule an immediate cross-region and production-simulated disaster recovery drill using the runbook. |\n| Recurring database-related production outages | High | `ledger-service` experienced SEV2 database-related outages lasting 38 minutes (2024-04-03) and 29 minutes (2024-09-30) [S6][S7]. | Prioritize database reliability engineering and root-cause remediation for recurring SEV2 events. |\n\n**Sources disagree**\nThere is a discrepancy regarding region deployment and failover capabilities for `ledger-db` between the architecture overview and the postmortem report (A:[] B:[]).\n\n**Open questions**\n- What are the actual measured RPO and RTO metrics during recent production incidents?\n- How frequently are database backup and restore processes tested and verified?",
+   "citations": [
+    {
+     "label": "S5",
+     "chunk_id": "postmortem-2024-07-region-outage@v1#2",
+     "source_id": "postmortem-2024-07-region-outage@v1",
+     "title": "Postmortem INC-1247 us-east1 regional outage",
+     "section_path": [
+      "Postmortem INC-1247: Full payments outage during us-east1 incident",
+      "Root Cause"
+     ],
+     "doc_date": "2024-07-22 00:00:00+00:00",
+     "passage": "Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Root Cause\n\nThe platform is effectively single-region for its data tier. Stateless services run in both regions, but\nledger-db has a single primary and both read replicas in us-east1. The managed failover controller only\nfails over within a region.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S4",
+     "chunk_id": "runbook-ledger-failover@v1#2",
+     "source_id": "runbook-ledger-failover@v1",
+     "title": "Runbook ledger-db manual failover",
+     "section_path": [
+      "Runbook: ledger-db manual failover",
+      "Last tested"
+     ],
+     "doc_date": "2022-11-08 00:00:00+00:00",
+     "passage": "Runbook: ledger-db manual failover \u203a Last tested\n\nThis runbook was last exercised on 2022-11-08 in staging.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S6",
+     "chunk_id": "incidents@v1#4",
+     "source_id": "incidents@v1",
+     "title": "Incident Register 2024",
+     "section_path": [
+      "Incident Register 2024",
+      "row 5"
+     ],
+     "doc_date": "2024-10-01 00:00:00+00:00",
+     "passage": "Incident Register 2024 record 5: incident_id: INC-1190 | date: 2024-04-03 | service: ledger-service | severity: SEV2 | minutes_down: 38 | root_cause_category: database",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S7",
+     "chunk_id": "incidents@v1#11",
+     "source_id": "incidents@v1",
+     "title": "Incident Register 2024",
+     "section_path": [
+      "Incident Register 2024",
+      "row 12"
+     ],
+     "doc_date": "2024-10-01 00:00:00+00:00",
+     "passage": "Incident Register 2024 record 12: incident_id: INC-1279 | date: 2024-09-30 | service: ledger-service | severity: SEV2 | minutes_down: 29 | root_cause_category: database",
+     "supporting_chunk_ids": null
+    }
+   ],
+   "conflicts": [
+    {
+     "description": "Discrepancy in region deployment and failover capabilities for ledger-db between the architecture overview and the postmortem report.",
+     "side_a": [],
+     "side_b": []
+    }
+   ],
+   "discovery": [],
+   "plan": [
+    {
+     "id": "Q1",
+     "question": "What are the documented disaster-recovery and failover procedures for ledger-db?",
+     "specialist": "reliability",
+     "kinds": [
+      "architecture",
+      "runbook",
+      "postmortem"
+     ],
+     "use_records": false
+    },
+    {
+     "id": "Q2",
+     "question": "How frequently are backup and restore processes for ledger-db tested and verified?",
+     "specialist": "delivery",
+     "kinds": [
+      "records",
+      "runbook"
+     ],
+     "use_records": true
+    },
+    {
+     "id": "Q3",
+     "question": "What are the RPO and RTO targets and actual metrics for ledger-db?",
+     "specialist": "scalability",
+     "kinds": [
+      "architecture",
+      "records"
+     ],
+     "use_records": true
+    }
+   ],
+   "memories_used": [],
+   "verification": {
+    "results": [
+     {
+      "claim_id": "C1",
+      "supported": true,
+      "reason": "Evidence S5 explicitly states that the platform is effectively single-region for its data tier, ledger-db has a single primary and both read replicas in us-east1, and the managed failover controller only fails over within a region."
+     },
+     {
+      "claim_id": "C2",
+      "supported": true,
+      "reason": "Evidence S4 states that the runbook was last exercised on 2022-11-08 in staging."
+     },
+     {
+      "claim_id": "C3",
+      "supported": true,
+      "reason": "Evidence S6 and S7 confirm ledger-service experienced SEV2 database-related outages of 38 minutes on 2024-04-03 and 29 minutes on 2024-09-30 respectively."
+     }
+    ],
+    "unsupported": [],
+    "route": "write",
+    "attempt": 1
+   },
+   "tool_log": [
+    {
+     "subquestion": "Q1",
+     "step": 1,
+     "thought": "I need to find the documented disaster-recovery and failover procedures for ledger-db. I will start by searching architecture and runbook documents.",
+     "action": "hybrid_search",
+     "observation": "S1 runbook-ledger-failover@v1 Runbook: ledger-db manual failover > When to use: 'Runbook: ledger-db manual failover \u203a When to use\\n\\nUse only if the managed failover controller does not promote a replica within 5 minutes.'; S2 runbook-ledger-failover@v1 Runbook: ledger-db manual failover > Steps: 'Runbook: ledger-db manual failover \u203a Steps\\n\\n1. Freeze writes by scaling ledger-service to zero replicas.\\n2. Promote replica host ledger-db-replica-2.us-east1 us'; S3 arch-overview@v1 Payments Platfo"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 1,
+     "thought": "Search for ledger-db backup and restore testing frequency in runbooks and records.",
+     "action": "hybrid_search",
+     "observation": "S6 incidents@v1 Incident Register 2024 > row 5: 'Incident Register 2024 record 5: incident_id: INC-1190 | date: 2024-04-03 | service: ledger-service | severity: SEV2 | minutes_down: 38 | root_cause_category: d'; S7 incidents@v1 Incident Register 2024 > row 12: 'Incident Register 2024 record 12: incident_id: INC-1279 | date: 2024-09-30 | service: ledger-service | severity: SEV2 | minutes_down: 29 | root_cause_category: '"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 2,
+     "thought": "Search for ledger-db backup and restore testing frequency in runbooks and procedures.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 3,
+     "thought": "I have searched for backup and restore procedures and testing frequency for ledger-db, but have not found explicit details on frequency yet. Let me search more specifically for 'backup' and 'restore' in runbooks.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 4,
+     "thought": "Search for backup and restore testing frequency for ledger-db using broader terms like backup or restore in runbooks.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 1,
+     "thought": "Search for RPO and RTO targets and actual metrics for ledger-db in architecture and records.",
+     "action": "hybrid_search",
+     "observation": "S8 arch-overview@v1 Payments Platform Architecture Overview > 3. Data Tier: 'Payments Platform Architecture Overview \u203a 3. Data Tier\\n\\nledger-service persists double-entry ledger records in a PostgreSQL 14 cluster called ledger-db. Writes '; S9 arch-overview@v1 Payments Platform Architecture Overview > 5. Observability: 'Payments Platform Architecture Overview \u203a 5. Observability\\n\\nMetrics are exported to Cloud Monitoring; logs go to Cloud Logging with 30-day retention. The on-cal'"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 2,
+     "thought": "Let's search specifically for ledger-db RPO and RTO in architecture documents and incident records.",
+     "action": "hybrid_search",
+     "observation": "S10 arch-overview@v1 Payments Platform Architecture Overview > 1. Purpose: 'Payments Platform Architecture Overview \u203a 1. Purpose\\n\\nThis document describes the target and current architecture of the Acme payments platform, which processes'"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 3,
+     "thought": "Let's search for RPO and RTO metrics specifically associated with ledger-db or ledger-service in the architecture documents and SLO/incident records.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "Q3",
+     "step": 4,
+     "thought": "Let's search for RPO, RTO, ledger-db, and SLO documents specifically.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    }
+   ],
+   "evidence_count": 10,
+   "retrieval_backends": {
+    "vector": "python-cosine",
+    "text": "python-bm25"
+   },
+   "metrics": {
+    "latency_ms": 116252.6,
+    "llm_calls": 14,
+    "tool_calls": 9,
+    "tokens_in": 9918,
+    "tokens_out": 2242,
+    "output_tokens_per_sec": 20.2,
+    "cost_usd": 0.00858,
+    "models": [
+     "gemini-3.5-flash-lite"
+    ]
+   },
+   "spans": [
+    {
+     "name": "recall_memory",
+     "parent": null,
+     "ms": 391.9,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "supervisor",
+     "parent": null,
+     "ms": 1407.5,
+     "llm_calls": 1,
+     "tokens_in": 229,
+     "tokens_out": 149,
+     "llm_ms": 1407.3878999915905,
+     "cost_usd": 0.000441,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 442.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db disaster recovery failover procedures",
+        "kinds": [
+         "architecture",
+         "runbook",
+         "postmortem"
+        ]
+       },
+       "results": 5,
+       "ms": 442.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 642.1,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db backup restore test frequency",
+        "kinds": [
+         "runbook",
+         "records"
+        ]
+       },
+       "results": 5,
+       "ms": 642.1
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 406.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db backup restore test frequency verification",
+        "kinds": [
+         "runbook",
+         "wiki"
+        ]
+       },
+       "results": 3,
+       "ms": 406.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 402.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db backup restore test frequency runbook",
+        "kinds": [
+         "runbook",
+         "procedure"
+        ]
+       },
+       "results": 3,
+       "ms": 402.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 408.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "backup restore testing frequency ledger-db",
+        "kinds": [
+         "runbook",
+         "policy",
+         "docs"
+        ]
+       },
+       "results": 3,
+       "ms": 408.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 1149.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db RPO RTO targets actual metrics",
+        "kinds": [
+         "architecture",
+         "records"
+        ]
+       },
+       "results": 5,
+       "ms": 1149.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 417.5,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db RPO RTO target actual",
+        "kinds": [
+         "architecture",
+         "records"
+        ]
+       },
+       "results": 5,
+       "ms": 417.5
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 435.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db RPO RTO target actual metric",
+        "kinds": [
+         "architecture",
+         "records",
+         "slo"
+        ]
+       },
+       "results": 5,
+       "ms": 435.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 443.4,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db RPO RTO target actual metric",
+        "kinds": [
+         "architecture",
+         "records",
+         "runbook",
+         "slo"
+        ]
+       },
+       "results": 5,
+       "ms": 443.3
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "researcher",
+     "parent": null,
+     "ms": 75484.6,
+     "llm_calls": 10,
+     "tokens_in": 6363,
+     "tokens_out": 959,
+     "llm_ms": 70733.56989998138,
+     "cost_usd": 0.004306,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "analyst",
+     "parent": null,
+     "ms": 2586.9,
+     "llm_calls": 1,
+     "tokens_in": 1486,
+     "tokens_out": 452,
+     "llm_ms": 2586.774700030219,
+     "cost_usd": 0.001576,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "verifier",
+     "parent": null,
+     "ms": 5681.6,
+     "llm_calls": 1,
+     "tokens_in": 1468,
+     "tokens_out": 239,
+     "llm_ms": 5681.457299971953,
+     "cost_usd": 0.001038,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "writer",
+     "parent": null,
+     "ms": 30691.9,
+     "llm_calls": 1,
+     "tokens_in": 372,
+     "tokens_out": 443,
+     "llm_ms": 30691.708600032143,
+     "cost_usd": 0.001219,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    }
+   ],
+   "cache": {
+    "hit": false
+   },
+   "question": "How serious is the disaster-recovery risk for ledger-db right now?"
+  },
+  {
+   "run_id": "3e78da9a105c",
+   "status": "answered",
+   "answer": "**Answer**\nThe disaster-recovery risk for `ledger-db` is critical right now because the platform is effectively single-region with all read replicas and the single primary located in `us-east1` [S6] [S8]. Action items from the July 2024 regional outage postmortem\u2014specifically creating a cross-region replica in `us-west1` and running quarterly DR game days\u2014remain unstarted [S7]. Furthermore, during that July outage, the manual failover runbook failed because it referenced a decommissioned replica host [S3] [S6].\n\n**Risk register**\n\n| Risk | Severity | Evidence | Recommendation |\n| :--- | :--- | :--- | :--- |\n| Platform is single-region for data tier; managed failover controller only operates within a region. | High | [S6] [S8] | Provision a cross-region replica of `ledger-db` in `us-west1` and update failover automation to support cross-region targets. |\n| July 2024 postmortem action items (cross-region replica and quarterly DR game days) remain unstarted. | High | [S7] | Immediately schedule and resource the unstarted postmortem action items. |\n| Manual `ledger-db` failover runbook failed during the July 2024 outage due to referencing a decommissioned replica host. | High | [S3] [S6] | Audit and update all disaster recovery runbooks to remove decommissioned hosts and validate accuracy. |\n\n**Sources disagree**\n*   **Architecture vs. Postmortem (Data Tier Architecture):** Architecture documentation states the platform is deployed multi-region active-active with automated database failover [S1], while postmortem evidence shows the data tier is single-region with no cross-region replica [S6] [S8].\n*   **Client Statement vs. Postmortem (DR Testing):** Client CTO stated in workshop 2 that a cross-region DR failover test passed on 2024-10-14 [client_statement], whereas postmortem action items from July 2024 state that cross-region replicas and quarterly DR game days were not started [S7]. *(Note: Client statement is unverified).*\n\n**Open questions**\n*   What is the exact current status of the budget approval blocking the cross-region replica for `ledger-db` in `us-west1`?\n*   Are there detailed technical logs or audit reports verifying the client-stated cross-region DR failover test on 2024-10-14?",
+   "citations": [
+    {
+     "label": "S6",
+     "chunk_id": "postmortem-2024-07-region-outage@v1#1",
+     "source_id": "postmortem-2024-07-region-outage@v1",
+     "title": "Postmortem INC-1247 us-east1 regional outage",
+     "section_path": [
+      "Postmortem INC-1247: Full payments outage during us-east1 incident",
+      "Timeline"
+     ],
+     "doc_date": "2024-07-22 00:00:00+00:00",
+     "passage": "Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Timeline\n\n- 09:14 UTC us-east1 network degradation begins; ledger-service writes start failing.\n- 09:20 Global load balancer shifts PAY-API traffic to us-west1 as designed.\n- 09:21 us-west1 PAY-API returns errors: ledger-service in us-west1 cannot reach the ledger-db primary, which\n  only exists in us-east1. There is no cross-region replica of ledger-db.\n- 10:05 Team attempts the manual ledger-db failover runbook; the runbook references a decommissioned\n  replica host and fails.\n- 12:26 us-east1 recovers; payments resume.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S8",
+     "chunk_id": "postmortem-2024-07-region-outage@v1#2",
+     "source_id": "postmortem-2024-07-region-outage@v1",
+     "title": "Postmortem INC-1247 us-east1 regional outage",
+     "section_path": [
+      "Postmortem INC-1247: Full payments outage during us-east1 incident",
+      "Root Cause"
+     ],
+     "doc_date": "2024-07-22 00:00:00+00:00",
+     "passage": "Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Root Cause\n\nThe platform is effectively single-region for its data tier. Stateless services run in both regions, but\nledger-db has a single primary and both read replicas in us-east1. The managed failover controller only\nfails over within a region.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S7",
+     "chunk_id": "postmortem-2024-07-region-outage@v1#4",
+     "source_id": "postmortem-2024-07-region-outage@v1",
+     "title": "Postmortem INC-1247 us-east1 regional outage",
+     "section_path": [
+      "Postmortem INC-1247: Full payments outage during us-east1 incident",
+      "Action Items"
+     ],
+     "doc_date": "2024-07-22 00:00:00+00:00",
+     "passage": "Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Action Items\n\n1. Create a cross-region replica of ledger-db in us-west1 - NOT STARTED (blocked on budget approval).\n2. Quarterly DR failover game days - NOT STARTED.\n3. Correct the architecture documentation - NOT STARTED.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S3",
+     "chunk_id": "runbook-ledger-failover@v1#1",
+     "source_id": "runbook-ledger-failover@v1",
+     "title": "Runbook ledger-db manual failover",
+     "section_path": [
+      "Runbook: ledger-db manual failover",
+      "Steps"
+     ],
+     "doc_date": "2022-11-08 00:00:00+00:00",
+     "passage": "Runbook: ledger-db manual failover \u203a Steps\n\n1. Freeze writes by scaling ledger-service to zero replicas.\n2. Promote replica host ledger-db-replica-2.us-east1 using the promote command.\n3. Update the ledger-db DNS record to the promoted host.\n4. Scale ledger-service back up and verify replication lag is zero.",
+     "supporting_chunk_ids": null
+    },
+    {
+     "label": "S1",
+     "chunk_id": "arch-overview@v1#3",
+     "source_id": "arch-overview@v1",
+     "title": "Payments Platform Architecture Overview",
+     "section_path": [
+      "Payments Platform Architecture Overview",
+      "4. Availability and Disaster Recovery"
+     ],
+     "doc_date": "2024-05-02 00:00:00+00:00",
+     "passage": "Payments Platform Architecture Overview \u203a 4. Availability and Disaster Recovery\n\nThe platform is deployed **multi-region active-active** across us-east1 and us-west1. Global load balancing\nroutes traffic to the healthy region. The stated recovery time objective (RTO) is 15 minutes and the recovery\npoint objective (RPO) is 1 minute.\n\nDatabase failover for ledger-db is described as automatic within 60 seconds using the managed failover\ncontroller.",
+     "supporting_chunk_ids": null
+    }
+   ],
+   "conflicts": [
+    {
+     "description": "Architecture documentation states the platform is deployed multi-region active-active with automated database failover, while postmortem evidence shows the data tier is single-region with no cross-region replica.",
+     "side_a": [
+      "S1"
+     ],
+     "side_b": [
+      "S6",
+      "S8"
+     ]
+    },
+    {
+     "description": "Client statement (unverified) asserts that a cross-region DR failover test passed on 2024-10-14, whereas postmortem action items from July 2024 state that cross-region replicas and quarterly DR game days were not started.",
+     "side_a": [],
+     "side_b": [
+      "S7"
+     ]
+    }
+   ],
+   "discovery": [],
+   "plan": [
+    {
+     "id": "Q1",
+     "question": "What are the documented RPO, RTO, and failover procedures for ledger-db?",
+     "specialist": "reliability",
+     "kinds": [
+      "runbook",
+      "architecture"
+     ],
+     "use_records": false
+    },
+    {
+     "id": "Q2",
+     "question": "What evidence exists in postmortems and records regarding past ledger-db DR tests or outages?",
+     "specialist": "reliability",
+     "kinds": [
+      "postmortem",
+      "records"
+     ],
+     "use_records": true
+    }
+   ],
+   "memories_used": [
+    {
+     "id": "6b007a3bd7c017d9d120fa4b",
+     "type": "client_statement",
+     "content": "Client CTO stated in workshop 2 that a ledger-db cross-region DR failover test passed on 2024-10-14.",
+     "owner_id": "analyst",
+     "score": 0.853,
+     "created_at": "2026-11-20 16:50:02.407000+00:00"
+    }
+   ],
+   "verification": {
+    "results": [
+     {
+      "claim_id": "C1",
+      "supported": true,
+      "reason": "S1 states the recovery time objective (RTO) is 15 minutes, recovery point objective (RPO) is 1 minute, and database failover is automatic within 60 seconds using the managed failover controller."
+     },
+     {
+      "claim_id": "C2",
+      "supported": true,
+      "reason": "S8 states the platform is effectively single-region for its data tier, ledger-db has a single primary and read replicas in us-east1, and the managed failover controller only fails over within a region."
+     },
+     {
+      "claim_id": "C3",
+      "supported": true,
+      "reason": "S7 lists creating a cross-region replica in us-west1 and quarterly DR failover game days as NOT STARTED."
+     },
+     {
+      "claim_id": "C4",
+      "supported": true,
+      "reason": "S6 states that the team attempted the manual ledger-db failover runbook and it failed because it referenced a decommissioned replica host."
+     }
+    ],
+    "unsupported": [],
+    "route": "write",
+    "attempt": 2
+   },
+   "tool_log": [
+    {
+     "subquestion": "Q1",
+     "step": 1,
+     "thought": "I need to find the documented RPO, RTO, and failover procedures for ledger-db by searching runbook and architecture documents.",
+     "action": "hybrid_search",
+     "observation": "S1 arch-overview@v1 Payments Platform Architecture Overview > 4. Availability and Disaster Recovery: 'Payments Platform Architecture Overview \u203a 4. Availability and Disaster Recovery\\n\\nThe platform is deployed **multi-region active-active** across us-east1 and us-'; S2 runbook-ledger-failover@v1 Runbook: ledger-db manual failover > When to use: 'Runbook: ledger-db manual failover \u203a When to use\\n\\nUse only if the managed failover controller does not promote a replica within 5 minutes.'; S3 runboo"
+    },
+    {
+     "subquestion": "Q1",
+     "step": 2,
+     "thought": "I have found relevant runbook and architecture documents describing the RPO, RTO, and failover procedures for ledger-db. Let me expand context on the failover runbook and architecture overview to get exact RPO and RTO metrics.",
+     "action": "expand_context",
+     "observation": "no new passages - neighbours are already in the evidence; search a different angle or finish"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 1,
+     "thought": "I need to search for postmortems and records related to ledger-db DR tests or outages.",
+     "action": "hybrid_search",
+     "observation": "S6 postmortem-2024-07-region-outage@v1 Postmortem INC-1247: Full payments outage during us-east1 incident > Timeline: 'Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Timeline\\n\\n- 09:14 UTC us-east1 network degradation begins; ledger-service writes start fail'; S7 postmortem-2024-07-region-outage@v1 Postmortem INC-1247: Full payments outage during us-east1 incident > Action Items: 'Postmortem INC-1247: Full payments outage during us-east1 incident \u203a Action Items\\n\\n1. Creat"
+    },
+    {
+     "subquestion": "Q2",
+     "step": 2,
+     "thought": "I have found relevant postmortem evidence regarding ledger-db and DR tests/outages in INC-1247. Now I will query records to see if there are other incidents or specific metrics related to ledger-service or database outages.",
+     "action": "query_records",
+     "observation": "S11 aggregate for spec {\"match\": {\"service\": \"ledger-service\"}, \"group_by\": \"root_cause_category\", \"metric\": \"count\", \"limit\": 10}: [{\"group\": \"database\", \"value\": 4, \"chunk_ids\": [\"incidents@v1#1\", \"incidents@v1#4\", \"incidents@v1#7\", \"incidents@v1#11\"]}, {\"group\": \"regional-outage\", \"value\": 1, \"chunk_ids\": [\"incidents@v1#8\"]}]"
+    },
+    {
+     "subquestion": "G1",
+     "step": 1,
+     "thought": "I need to search for quarterly DR failover game days and why they were marked as not started in postmortem action items.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "G1",
+     "step": 2,
+     "thought": "Let's search for quarterly DR failover game days and postmortem action items to find the reason.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "G1",
+     "step": 3,
+     "thought": "Let's search for DR failover game days and action items using a broader query.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    },
+    {
+     "subquestion": "G1",
+     "step": 4,
+     "thought": "Let's search for 'DR failover' or 'game days' across all documents to find the postmortem action items.",
+     "action": "hybrid_search",
+     "observation": "no new results"
+    }
+   ],
+   "evidence_count": 11,
+   "retrieval_backends": {
+    "vector": "python-cosine",
+    "text": "python-bm25"
+   },
+   "metrics": {
+    "latency_ms": 165973.8,
+    "llm_calls": 16,
+    "tool_calls": 8,
+    "tokens_in": 15269,
+    "tokens_out": 3274,
+    "output_tokens_per_sec": 20.2,
+    "cost_usd": 0.012766,
+    "models": [
+     "gemini-3.5-flash-lite"
+    ]
+   },
+   "spans": [
+    {
+     "name": "recall_memory",
+     "parent": null,
+     "ms": 398.9,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "supervisor",
+     "parent": null,
+     "ms": 5413.3,
+     "llm_calls": 1,
+     "tokens_in": 265,
+     "tokens_out": 107,
+     "llm_ms": 5413.228499994148,
+     "cost_usd": 0.000347,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 420.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db RPO RTO failover procedures",
+        "kinds": [
+         "runbook",
+         "architecture"
+        ]
+       },
+       "results": 5,
+       "ms": 420.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:expand_context",
+     "parent": "researcher",
+     "ms": 0.2,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "expand_context",
+       "args": {
+        "chunk_id": "runbook-ledger-failover@v1"
+       },
+       "results": 0,
+       "ms": 0.2
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 402.7,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "ledger-db DR test outage",
+        "kinds": [
+         "postmortem",
+         "records"
+        ]
+       },
+       "results": 5,
+       "ms": 402.7
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:query_records",
+     "parent": "researcher",
+     "ms": 43.0,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "query_records",
+       "args": {
+        "match": {
+         "service": "ledger-service"
+        },
+        "group_by": "root_cause_category",
+        "metric": "count",
+        "limit": 10
+       },
+       "results": 2,
+       "ms": 43.0
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "researcher",
+     "parent": null,
+     "ms": 49591.3,
+     "llm_calls": 6,
+     "tokens_in": 4723,
+     "tokens_out": 642,
+     "llm_ms": 48721.9635999063,
+     "cost_usd": 0.003022,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "analyst",
+     "parent": null,
+     "ms": 36369.5,
+     "llm_calls": 1,
+     "tokens_in": 1909,
+     "tokens_out": 451,
+     "llm_ms": 36369.344100006856,
+     "cost_usd": 0.0017,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "verifier",
+     "parent": null,
+     "ms": 17812.4,
+     "llm_calls": 1,
+     "tokens_in": 1878,
+     "tokens_out": 281,
+     "llm_ms": 17812.165799958166,
+     "cost_usd": 0.001266,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 425.8,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "quarterly DR failover game days not started postmortem action items",
+        "kinds": []
+       },
+       "results": 5,
+       "ms": 425.8
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 1052.1,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "quarterly DR failover game days not started postmortem action items",
+        "kinds": [
+         "postmortem",
+         "incident",
+         "action_item",
+         "report"
+        ]
+       },
+       "results": 5,
+       "ms": 1052.1
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 506.8,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "quarterly DR failover game days not started postmortem action items",
+        "kinds": []
+       },
+       "results": 5,
+       "ms": 506.8
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "tool:hybrid_search",
+     "parent": "researcher",
+     "ms": 413.6,
+     "llm_calls": 0,
+     "tokens_in": 0,
+     "tokens_out": 0,
+     "llm_ms": 0.0,
+     "cost_usd": 0.0,
+     "tool_calls": [
+      {
+       "tool": "hybrid_search",
+       "args": {
+        "query": "DR failover game days postmortem action items",
+        "kinds": []
+       },
+       "results": 5,
+       "ms": 413.6
+      }
+     ],
+     "models": [],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "researcher",
+     "parent": null,
+     "ms": 40531.1,
+     "llm_calls": 4,
+     "tokens_in": 2079,
+     "tokens_out": 345,
+     "llm_ms": 38130.11019991245,
+     "cost_usd": 0.001486,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "analyst",
+     "parent": null,
+     "ms": 3047.8,
+     "llm_calls": 1,
+     "tokens_in": 1909,
+     "tokens_out": 606,
+     "llm_ms": 3047.6557000074536,
+     "cost_usd": 0.002088,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "verifier",
+     "parent": null,
+     "ms": 5803.3,
+     "llm_calls": 1,
+     "tokens_in": 1927,
+     "tokens_out": 285,
+     "llm_ms": 5803.178500034846,
+     "cost_usd": 0.001291,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    },
+    {
+     "name": "writer",
+     "parent": null,
+     "ms": 6995.0,
+     "llm_calls": 1,
+     "tokens_in": 579,
+     "tokens_out": 557,
+     "llm_ms": 6994.928499974776,
+     "cost_usd": 0.001566,
+     "tool_calls": [],
+     "models": [
+      "gemini-3.5-flash-lite"
+     ],
+     "attrs": {},
+     "error": null
+    }
+   ],
+   "cache": {
+    "hit": false
+   },
+   "question": "How serious is the disaster-recovery risk for ledger-db right now?"
+  }
+ ],
+ "eval": {
+  "created_at": "2026-11-20 16:52:49.634962+00:00",
+  "engagement_id": "acme-payments",
+  "k": 5,
+  "golden_size": 12,
+  "config": {
+   "llm": "gemini",
+   "embedding": "gemini",
+   "rrf_k": 60,
+   "weights": [
+    1.0,
+    1.0
+   ],
+   "chunk_tokens": 350
+  },
+  "retrieval": [
+   {
+    "mode": "vector",
+    "k": 5,
+    "backend": {
+     "vector": "python-cosine",
+     "text": "python-bm25"
+    },
+    "recall": 1.0,
+    "hit": 1.0,
+    "mrr": 0.9333333333333332,
+    "ndcg": 0.95,
+    "p50_ms": 423.47209999570623,
+    "p95_ms": 651.7101000063121,
+    "per_question": [
+     {
+      "id": "g01",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g02",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "arch-overview",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g03",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "arch-overview",
+       "postmortem-2024-07-region-outage",
+       "arch-overview",
+       "runbook-ledger-failover",
+       "runbook-ledger-failover"
+      ]
+     },
+     {
+      "id": "g04",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "runbook-ledger-failover",
+       "runbook-ledger-failover",
+       "runbook-ledger-failover",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g05",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "incidents",
+       "incidents",
+       "incidents",
+       "incidents",
+       "incidents"
+      ]
+     },
+     {
+      "id": "g06",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "security-review-2024",
+       "repo-summary",
+       "security-review-2024",
+       "repo-summary",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g07",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 0.3333333333333333,
+      "ndcg": 0.5,
+      "retrieved": [
+       "runbook-ledger-failover",
+       "postmortem-2024-07-region-outage",
+       "repo-summary",
+       "arch-overview",
+       "repo-summary"
+      ]
+     },
+     {
+      "id": "g08",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "repo-summary",
+       "security-review-2024",
+       "postmortem-2024-07-region-outage",
+       "security-review-2024",
+       "repo-summary"
+      ]
+     },
+     {
+      "id": "g09",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-03-pay-api"
+      ]
+     },
+     {
+      "id": "g12",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "repo-summary",
+       "arch-overview",
+       "postmortem-2024-07-region-outage",
+       "arch-overview",
+       "runbook-ledger-failover"
+      ]
+     }
+    ]
+   },
+   {
+    "mode": "text",
+    "k": 5,
+    "backend": {
+     "vector": "python-cosine",
+     "text": "python-bm25"
+    },
+    "recall": 0.9,
+    "hit": 0.9,
+    "mrr": 0.8,
+    "ndcg": 0.8261859507142916,
+    "p50_ms": 2.39140004850924,
+    "p95_ms": 3.4081999910995364,
+    "per_question": [
+     {
+      "id": "g01",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g02",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g03",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-07-region-outage",
+       "arch-overview",
+       "arch-overview",
+       "postmortem-2024-07-region-outage",
+       "runbook-ledger-failover"
+      ]
+     },
+     {
+      "id": "g04",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "runbook-ledger-failover",
+       "runbook-ledger-failover",
+       "runbook-ledger-failover",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g05",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309297535714575,
+      "retrieved": [
+       "arch-overview",
+       "incidents",
+       "incidents",
+       "incidents",
+       "incidents"
+      ]
+     },
+     {
+      "id": "g06",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "security-review-2024",
+       "arch-overview",
+       "runbook-ledger-failover",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g07",
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "retrieved": [
+       "arch-overview",
+       "postmortem-2024-07-region-outage",
+       "runbook-ledger-failover"
+      ]
+     },
+     {
+      "id": "g08",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309297535714575,
+      "retrieved": [
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "repo-summary",
+       "repo-summary",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g09",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "incidents",
+       "incidents",
+       "incidents"
+      ]
+     },
+     {
+      "id": "g12",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "repo-summary",
+       "arch-overview",
+       "runbook-ledger-failover",
+       "postmortem-2024-07-region-outage",
+       "arch-overview"
+      ]
+     }
+    ]
+   },
+   {
+    "mode": "hybrid",
+    "k": 5,
+    "backend": {
+     "vector": "python-cosine",
+     "text": "python-bm25"
+    },
+    "recall": 1.0,
+    "hit": 1.0,
+    "mrr": 0.925,
+    "ndcg": 0.9430676558073394,
+    "p50_ms": 420.7603999529965,
+    "p95_ms": 466.4182999986224,
+    "per_question": [
+     {
+      "id": "g01",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g02",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "arch-overview"
+      ]
+     },
+     {
+      "id": "g03",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "arch-overview",
+       "postmortem-2024-07-region-outage",
+       "arch-overview",
+       "runbook-ledger-failover",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g04",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "runbook-ledger-failover",
+       "runbook-ledger-failover",
+       "runbook-ledger-failover",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g05",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "incidents",
+       "incidents",
+       "incidents",
+       "incidents",
+       "incidents"
+      ]
+     },
+     {
+      "id": "g06",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "security-review-2024",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-07-region-outage",
+       "postmortem-2024-07-region-outage",
+       "arch-overview"
+      ]
+     },
+     {
+      "id": "g07",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 0.25,
+      "ndcg": 0.43067655807339306,
+      "retrieved": [
+       "runbook-ledger-failover",
+       "postmortem-2024-07-region-outage",
+       "arch-overview",
+       "repo-summary",
+       "repo-summary"
+      ]
+     },
+     {
+      "id": "g08",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "repo-summary",
+       "repo-summary",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-07-region-outage"
+      ]
+     },
+     {
+      "id": "g09",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "postmortem-2024-03-pay-api",
+       "postmortem-2024-03-pay-api",
+       "incidents",
+       "incidents",
+       "incidents"
+      ]
+     },
+     {
+      "id": "g12",
+      "recall": 1.0,
+      "hit": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "retrieved": [
+       "repo-summary",
+       "arch-overview",
+       "arch-overview",
+       "postmortem-2024-07-region-outage",
+       "runbook-ledger-failover"
+      ]
+     }
+    ]
+   }
+  ],
+  "agent": {
+   "abstention_accuracy": 1.0,
+   "citation_precision": 0.8438095238095238,
+   "faithfulness": 0.8834,
+   "p50_latency_ms": 55916.2,
+   "p95_latency_ms": 982055.6,
+   "errors": 0,
+   "mean_cost_usd": 0.006325583333333333,
+   "per_question": [
+    {
+     "id": "g01",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 0.6666666666666666,
+     "latency_ms": 107182.8,
+     "cost_usd": 0.005811,
+     "tokens_out_per_sec": 12.0,
+     "run_id": "b34c29cf5500",
+     "faithfulness": 0.667,
+     "unsupported": [
+      "What is the correlation, if any, between the reported ERR-4471 errors and the ledger-db cross-region DR failover test stated by the client CTO as having passed on 2024-10-14 [client_statement]?"
+     ]
+    },
+    {
+     "id": "g02",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 0.5714285714285714,
+     "latency_ms": 982055.6,
+     "cost_usd": 0.011481,
+     "tokens_out_per_sec": 3.0,
+     "run_id": "8bbc6dfb22a4",
+     "faithfulness": 1.0,
+     "unsupported": []
+    },
+    {
+     "id": "g03",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 1.0,
+     "latency_ms": 168117.0,
+     "cost_usd": 0.010183,
+     "tokens_out_per_sec": 15.4,
+     "run_id": "9cc7a6bafff5",
+     "faithfulness": 1.0,
+     "unsupported": []
+    },
+    {
+     "id": "g04",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 1.0,
+     "latency_ms": 112979.0,
+     "cost_usd": 0.004555,
+     "tokens_out_per_sec": 12.1,
+     "run_id": "52cc7438d449",
+     "faithfulness": 0.917,
+     "unsupported": [
+      "The client CTO stated in workshop 2 that a ledger-db cross-region DR failover test passed on October 14, 2024"
+     ]
+    },
+    {
+     "id": "g05",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 1.0,
+     "latency_ms": 40827.3,
+     "cost_usd": 0.002932,
+     "tokens_out_per_sec": 21.3,
+     "run_id": "e1bf984265f3",
+     "faithfulness": 1.0,
+     "unsupported": []
+    },
+    {
+     "id": "g06",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 1.0,
+     "latency_ms": 67133.3,
+     "cost_usd": 0.008018,
+     "tokens_out_per_sec": 31.2,
+     "run_id": "b7f512955424",
+     "faithfulness": 0.833,
+     "unsupported": [
+      "While the infrastructure successfully passed a cross-region DR failover test on 2024-10-14 [client_statement]"
+     ]
+    },
+    {
+     "id": "g07",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 0.2,
+     "latency_ms": 40121.4,
+     "cost_usd": 0.007977,
+     "tokens_out_per_sec": 56.6,
+     "run_id": "56c138219673",
+     "faithfulness": 1.0,
+     "unsupported": []
+    },
+    {
+     "id": "g08",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 1.0,
+     "latency_ms": 46128.8,
+     "cost_usd": 0.007444,
+     "tokens_out_per_sec": 39.7,
+     "run_id": "7e9db792f366",
+     "faithfulness": 0.667,
+     "unsupported": [
+      "Client statements also indicate that a ledger-db cross-region DR failover test passed on 2024-10-14 [client_statement]."
+     ]
+    },
+    {
+     "id": "g09",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 1.0,
+     "latency_ms": 60476.3,
+     "cost_usd": 0.005643,
+     "tokens_out_per_sec": 19.5,
+     "run_id": "0cda22769e9b",
+     "faithfulness": 1.0,
+     "unsupported": []
+    },
+    {
+     "id": "g10",
+     "status": "insufficient_evidence",
+     "abstention_correct": true,
+     "citation_precision": NaN,
+     "latency_ms": 38666.0,
+     "cost_usd": 0.003664,
+     "tokens_out_per_sec": 20.8,
+     "run_id": "b26fe0709660"
+    },
+    {
+     "id": "g11",
+     "status": "insufficient_evidence",
+     "abstention_correct": true,
+     "citation_precision": NaN,
+     "latency_ms": 55916.2,
+     "cost_usd": 0.003174,
+     "tokens_out_per_sec": 13.5,
+     "run_id": "6232e607204e"
+    },
+    {
+     "id": "g12",
+     "status": "answered",
+     "abstention_correct": true,
+     "citation_precision": 1.0,
+     "latency_ms": 40904.8,
+     "cost_usd": 0.005025,
+     "tokens_out_per_sec": 30.9,
+     "run_id": "ad07f4e7e655",
+     "faithfulness": 0.75,
+     "unsupported": [
+      "The client CTO stated in workshop 2 that a ledger-db cross-region DR failover test passed on 2024-10-14, which remains unverified."
+     ]
+    }
+   ]
+  },
+  "summary": {
+   "vector.recall": 1.0,
+   "vector.hit": 1.0,
+   "vector.mrr": 0.9333333333333332,
+   "vector.ndcg": 0.95,
+   "text.recall": 0.9,
+   "text.hit": 0.9,
+   "text.mrr": 0.8,
+   "text.ndcg": 0.8261859507142916,
+   "hybrid.recall": 1.0,
+   "hybrid.hit": 1.0,
+   "hybrid.mrr": 0.925,
+   "hybrid.ndcg": 0.9430676558073394,
+   "agent.abstention_accuracy": 1.0,
+   "agent.citation_precision": 0.8438095238095238,
+   "agent.faithfulness": 0.8834,
+   "agent.p50_latency_ms": 55916.2,
+   "agent.p95_latency_ms": 982055.6,
+   "agent.errors": 0,
+   "agent.mean_cost_usd": 0.006325583333333333
+  }
+ }
+}

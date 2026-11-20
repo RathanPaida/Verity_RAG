@@ -110,7 +110,27 @@ deploy/   deploy.sh (Cloud Run, Secret Manager, GCS, Eventarc, Job)   .github/wo
 docs/     RESULTS.md (real run) · DISCOVERY.md · FIELD_NOTES.md
 ```
 
-## 6. Offline baseline (`eval/baseline.json`; fake LLM + hash embeddings)
+## 6. Results
+
+### Real run with Gemini (2026-11-20; full report in [docs/RESULTS.md](docs/RESULTS.md))
+
+Gemini API free tier · `gemini-embedding-001` (768-d) · agents answered by `gemini-3.5-flash-lite` after fallback ·
+in-process MongoDB with the Python cosine/BM25 retrieval fallbacks (no Atlas cluster was available).
+
+| retrieval (12 golden Qs, k=5) | recall@5 | MRR | nDCG@5 |
+|---|---|---|---|
+| vector (Gemini embeddings) | 1.00 | 0.93 | 0.95 |
+| keyword (BM25) | 0.90 | 0.80 | 0.83 |
+| hybrid (RRF) | 1.00 | 0.93 | 0.94 |
+
+| agent | abstention accuracy | citation precision | faithfulness (LLM judge) | mean cost / question |
+|---|---|---|---|---|
+| full graph | **1.00** (12/12; both unanswerable Qs refused) | 0.84 | 0.88 | $0.006 |
+
+Latency (p50 56 s, p95 16 min) is dominated by free-tier rate-limit waits, not by the system. The conflict between
+the architecture doc and the July postmortem was flagged automatically. Re-run with `python -m scripts.showcase`.
+
+### Offline baseline (`eval/baseline.json`; fake LLM + hash embeddings, used by the CI gate)
 
 | mode | recall@5 | MRR | nDCG@5 |
 |---|---|---|---|
@@ -118,6 +138,4 @@ docs/     RESULTS.md (real run) · DISCOVERY.md · FIELD_NOTES.md
 | keyword (BM25) | 0.90 | 0.80 | 0.83 |
 | **hybrid (RRF)** | **1.00** | 0.72 | 0.78 |
 
-Agent (offline heuristics): abstention 0.83, citation precision 0.61, faithfulness 0.54. These numbers prove the
-harness and the gate work. Re-baseline with Vertex embeddings, Atlas indexes and Gemini before quoting any
-quality figures.
+The offline numbers only show that the harness and the gate work; quality figures come from the real run above.
