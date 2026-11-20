@@ -2,7 +2,7 @@
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const KINDS = ["architecture", "postmortem", "security", "repo", "runbook", "records"];
+const KINDS = ["architecture", "postmortem", "security", "repo", "runbook", "slo", "records"];
 const EXAMPLES = [
   "What are the top reliability risks of the payments platform?",
   "Is the payments platform really able to survive a regional outage?",

@@ -1,0 +1,11 @@
+deploy_id,date,service,change_type,rolled_back,caused_incident
+D-501,2024-01-08,notification-worker,feature,yes,INC-1102
+D-512,2024-02-01,ledger-service,schema-migration,yes,INC-1131
+D-530,2024-03-12,PAY-API,feature,no,none
+D-544,2024-04-02,ledger-service,schema-migration,yes,INC-1190
+D-551,2024-04-28,PAY-API,dependency-upgrade,yes,INC-1204
+D-563,2024-05-29,checkout-orchestrator,feature,yes,INC-1219
+D-577,2024-06-23,ledger-service,config,no,INC-1233
+D-590,2024-08-14,ledger-service,feature,no,none
+D-598,2024-09-03,fraud-scorer,feature,no,INC-1268
+D-604,2024-09-29,ledger-service,schema-migration,yes,INC-1279

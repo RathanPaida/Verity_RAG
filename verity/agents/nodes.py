@@ -135,8 +135,11 @@ def _react(sub: dict, state: VerityState, labels_used: int, fields: list[str]) -
                         "kinds": sub.get("kinds") or [], "spec_json": "", "chunk_id": ""}
             if step == 1 and sub.get("use_records") and fields:
                 gb = "service" if "service" in fields else fields[0]
+                spec = {"group_by": gb, "metric": "count"}
+                if 'source "incidents"' in schema_desc:
+                    spec = {"source": "incidents", "group_by": "service", "metric": "count"}
                 return {"thought": "aggregate records", "action": "query_records", "query": "", "kinds": [],
-                        "spec_json": json.dumps({"group_by": gb, "metric": "count"}), "chunk_id": ""}
+                        "spec_json": json.dumps(spec), "chunk_id": ""}
             return {"thought": "enough", "action": "finish", "query": "", "kinds": [], "spec_json": "",
                     "chunk_id": ""}
 

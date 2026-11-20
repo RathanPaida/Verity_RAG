@@ -5,8 +5,8 @@ import math
 
 
 def source_key(source_or_chunk_id: str) -> str:
-    """'arch-overview@v2#7' -> 'arch-overview'."""
-    return source_or_chunk_id.split("#")[0].split("@")[0]
+    """'acme-payments:arch-overview@v2#7' (or legacy 'arch-overview@v2#7') -> 'arch-overview'."""
+    return source_or_chunk_id.split("#")[0].split(":", 1)[-1].split("@")[0]
 
 
 def dedupe(seq: list[str]) -> list[str]:
@@ -65,3 +65,28 @@ def percentile(xs: list[float], p: float) -> float:
     xs = sorted(xs)
     idx = min(len(xs) - 1, max(0, math.ceil(p / 100 * len(xs)) - 1))
     return xs[idx]
+
+
+def fact_recall(answer: str, must_include: list[str]) -> float:
+    """Share of required facts present in the answer; 'a|b' means any alternative counts."""
+    if not must_include:
+        return float("nan")
+    a = (answer or "").lower()
+    return sum(any(alt.strip().lower() in a for alt in fact.split("|")) for fact in must_include) / len(must_include)
+
+
+def violates(answer: str, must_not_include: list[str]) -> bool:
+    a = (answer or "").lower()
+    return any(s.lower() in a for s in must_not_include)
+
+
+def bootstrap_ci(values: list[float], n: int = 2000, alpha: float = 0.05, seed: int = 7) -> tuple[float, float]:
+    """Percentile bootstrap CI of the mean (NaNs ignored). Makes small-sample uncertainty explicit."""
+    import random
+
+    xs = [x for x in values if not math.isnan(x)]
+    if len(xs) < 2:
+        return (float("nan"), float("nan"))
+    rng = random.Random(seed)
+    means = sorted(sum(rng.choice(xs) for _ in xs) / len(xs) for _ in range(n))
+    return (means[int(alpha / 2 * n)], means[int((1 - alpha / 2) * n) - 1])

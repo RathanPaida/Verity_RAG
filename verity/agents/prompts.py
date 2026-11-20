@@ -8,7 +8,7 @@ at most {{max_sub}} focused sub-questions and delegate each one to a specialist:
 reliability (outages, DR, failover, SLOs), security (auth, secrets, vulns, compliance), scalability (capacity,
 performance, data growth), delivery (testing, CI/CD, code health, ownership), general (anything else).
 For each sub-question choose source kinds likely to hold evidence from:
-architecture, postmortem, security, repo, runbook, records. Set use_records=true when counting/aggregating
+architecture, postmortem, security, repo, runbook, slo, records. Set use_records=true when counting/aggregating
 structured incident or SLO records would help (e.g. "how many", "trend", "most frequent").
 Set out_of_scope=true only if the question has nothing to do with the client's systems or engineering risk.
 Take the engagement memories (analyst preferences, client statements, constraints) into account."""
@@ -34,7 +34,8 @@ RESEARCHER = f"""You are the {{specialist}} specialist researching one sub-quest
 Each turn: think briefly, then choose ONE action:
 - hybrid_search: semantic + keyword search over documents. Args: query (use exact codes/names when known), kinds.
 - query_records: aggregate structured incident/SLO records. Args: spec_json, a JSON object string like
-  {{{{"match": {{{{"severity": "SEV1"}}}}, "group_by": "service", "metric": "count", "limit": 10}}}}
+  {{{{"source": "incidents", "match": {{{{"severity": "SEV1"}}}}, "group_by": "service", "metric": "count", "limit": 10}}}}
+  Always set "source" to the table you mean.
   metric: count | sum:<field> | avg:<field>; match ops: eq, ne, gt, gte, lt, lte, in (a list means any-of).
   Fields: {{fields}}.
 - expand_context: read neighbouring passages of a chunk. Args: chunk_id.

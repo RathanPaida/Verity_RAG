@@ -4,5 +4,17 @@
     "kind": "records",
     "owner": "acme-sre",
     "doc_date": "2024-10-01"
+  },
+  "deploys-2024.csv": {
+    "title": "Deploy Log 2024",
+    "kind": "records",
+    "owner": "acme-platform-team",
+    "doc_date": "2024-10-01"
+  },
+  "partner-integration-notes.html": {
+    "title": "Partner Integration Notes",
+    "kind": "architecture",
+    "owner": "acme-partner-eng",
+    "doc_date": "2024-07-01"
   }
 }
