@@ -6,8 +6,8 @@ from verity.retrieval.structured import query_records
 
 def test_ingestion_and_versioning(ingested):
     mdb, res = ingested
-    assert len(res) == 7 and all(r["status"] == "created" for r in res)
-    assert mdb["chunks"].count_documents({"fields": {"$ne": None}}) == 12
+    assert len(res) == 14 and all(r["status"] == "created" for r in res)
+    assert mdb["chunks"].count_documents({"fields": {"$ne": None}}) == 22  # 12 incidents + 10 deploys
     from verity.ingest.pipeline import ingest_path
     again = ingest_path("data/sample/repo-summary.md", "acme-payments")
     assert again[0]["status"] == "unchanged"
@@ -26,7 +26,7 @@ def test_metadata_filters(ingested):
 
 
 def test_structured_aggregation(ingested):
-    res = query_records("acme-payments", {"match": {"severity": {"in": ["SEV1", "SEV2"]}},
+    res = query_records("acme-payments", {"source": "incidents", "match": {"severity": {"in": ["SEV1", "SEV2"]}},
                                           "group_by": "service", "metric": "count"})
     top = res["rows"][0]
     assert top["group"] == "ledger-service" and top["value"] == 5
@@ -62,3 +62,26 @@ def test_record_schema_describes_values(ingested):
     from verity.retrieval.structured import record_schema
     d = record_schema("acme-payments")
     assert "severity (text: SEV1, SEV2, SEV3)" in d and "date (date" in d and "minutes_down (number" in d
+    assert 'source "deploys-2024" (10 rows)' in d and 'source "incidents" (12 rows)' in d
+
+
+def test_source_scoped_aggregation(ingested):
+    rolled = query_records("acme-payments", {"source": "deploys-2024", "match": {"rolled_back": "yes"},
+                                             "group_by": "service", "metric": "count"})
+    assert rolled["rows"][0] == {**rolled["rows"][0], "group": "ledger-service", "value": 3}
+    assert sum(r["value"] for r in rolled["rows"]) == 6
+
+
+def test_second_tenant_never_leaks(ingested):
+    from verity.ingest.pipeline import ingest_path
+    ingest_path("data/sample-globex", "globex-logistics")
+    hits = hybrid_search("SOC 2 Type II audit result no exceptions", Filters("acme-payments"), k=10)
+    assert hits and not any(h.source_id.startswith("globex") for h in hits)
+    assert any(h.source_id.startswith("globex") for h in
+               hybrid_search("SOC 2 Type II audit", Filters("globex-logistics"), k=3))
+
+
+def test_same_file_in_two_engagements_does_not_collide(ingested):
+    from verity.ingest.pipeline import ingest_path
+    res = ingest_path("data/sample/repo-summary.md", "other-client")
+    assert res[0]["source_id"] == "other-client:repo-summary@v1" and res[0]["status"] == "created"

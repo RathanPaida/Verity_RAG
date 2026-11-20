@@ -36,7 +36,8 @@ def ingest_document(doc: Document, engagement_id: str) -> dict:
     if latest and latest["content_hash"] == content_hash:
         return {"source_id": latest["_id"], "status": "unchanged", "chunks": latest["chunk_count"]}
     version = (latest["version"] + 1) if latest else 1
-    source_id = f"{doc.source_key}@v{version}"
+    # ids are scoped per engagement so two clients can import files with the same name
+    source_id = f"{engagement_id}:{doc.source_key}@v{version}"
 
     pieces = chunk_records(doc.records, doc.title) if doc.records is not None \
         else chunk_text(doc.text, settings.chunk_tokens)
@@ -49,7 +50,7 @@ def ingest_document(doc: Document, engagement_id: str) -> dict:
     if latest:  # older versions stay for audit / diff but leave retrieval
         db.sources().update_many({"engagement_id": engagement_id, "source_key": doc.source_key,
                                   "status": "active"}, {"$set": {"status": "superseded"}})
-        db.chunks().update_many({"engagement_id": engagement_id, "source_id": {"$regex": f"^{re.escape(doc.source_key)}@"},
+        db.chunks().update_many({"engagement_id": engagement_id, "source_id": {"$regex": f"^{re.escape(engagement_id)}:{re.escape(doc.source_key)}@"},
                                  "status": "active"}, {"$set": {"status": "superseded"}})
 
     db.sources().insert_one({

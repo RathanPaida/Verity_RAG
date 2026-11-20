@@ -21,10 +21,10 @@ def test_ui_and_health(client):
 def test_sources_chunks_and_search(client):
     srcs = client.get("/sources", params={"engagement_id": "acme-payments"}).json()
     assert {s["source_key"] for s in srcs} >= {"arch-overview", "incidents"}
-    src = client.get("/sources/arch-overview@v1").json()
+    src = client.get("/sources/acme-payments:arch-overview@v1").json()
     assert "multi-region active-active" in src["raw_text"]
     hits = client.post("/search", json={"engagement_id": "acme-payments", "query": "ERR-4471", "mode": "text"}).json()
-    assert hits[0]["source_id"].startswith("postmortem-2024-03-pay-api")
+    assert hits[0]["source_id"].startswith("acme-payments:postmortem-2024-03-pay-api")
     chunk = client.get(f"/chunks/{hits[0]['chunk_id']}").json()
     assert src["raw_text"] or chunk["text"]
 
@@ -33,8 +33,8 @@ def test_upload_creates_new_version(client, tmp_path):
     md = "---\ntitle: Repo\nkind: repo\n---\n# Repo\n\nCoverage is now 70% after the Q4 push.\n"
     r = client.post("/ingest", data={"engagement_id": "acme-payments"},
                     files=[("files", ("repo-summary.md", md.encode(), "text/markdown"))]).json()
-    assert r["results"][0]["source_id"] == "repo-summary@v2" and r["results"][0]["status"] == "updated"
-    old = client.get("/sources/repo-summary@v1").json()
+    assert r["results"][0]["source_id"] == "acme-payments:repo-summary@v2" and r["results"][0]["status"] == "updated"
+    old = client.get("/sources/acme-payments:repo-summary@v1").json()
     assert old["status"] == "superseded"
     bad = client.post("/ingest", data={"engagement_id": "acme-payments"},
                       files=[("files", ("x.exe", b"MZ", "application/octet-stream"))])

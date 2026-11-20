@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from eval.metrics import mrr, ndcg_at_k, recall_at_k, source_key
@@ -65,6 +67,7 @@ def test_metrics():
     assert mrr(["x", "a"], ["a"]) == 0.5
     assert 0 < ndcg_at_k(got, ["a", "b"], 3) < 1
     assert source_key("arch-overview@v2#7") == "arch-overview"
+    assert source_key("acme-payments:arch-overview@v2#7") == "arch-overview"
 
 
 def test_redaction():
@@ -106,3 +109,37 @@ def test_gateway_circuit_breaker_falls_back_on_429(monkeypatch):
 def test_bare_list_means_any_of():
     p = build_pipeline("e", {"match": {"severity": ["SEV1", "SEV2"]}, "group_by": "service"})
     assert p[0]["$match"]["fields.severity"] == {"$in": ["SEV1", "SEV2"]}
+
+
+def test_answer_metrics_and_bootstrap():
+    from eval.metrics import bootstrap_ci, fact_recall, violates
+    assert fact_recall("Black Friday 3,600 rps vs 2800 tested", ["3,600|3600", "2,800|2800"]) == 1.0
+    assert fact_recall("only 3600", ["3,600|3600", "2,800|2800"]) == 0.5
+    assert violates("The platform has NO MATERIAL RISKS.", ["no material risks"])
+    lo, hi = bootstrap_ci([1.0] * 40 + [0.0] * 10)
+    assert lo < 0.8 < hi and 0.6 < lo and hi <= 0.92
+
+
+def test_source_spec_validated():
+    with pytest.raises(SpecError):
+        build_pipeline("e", {"source": "../etc", "group_by": "service"})
+    p = build_pipeline("e", {"source": "deploys-2024", "group_by": "service"})
+    assert p[0]["$match"]["source_id"] == {"$regex": "^e:" + re.escape("deploys-2024") + "@"}
+
+
+def test_persistent_embedding_cache(tmp_path):
+    from verity.embeddings import CachedEmbedder, HashEmbedder
+
+    class Counting(HashEmbedder):
+        calls = 0
+
+        def embed(self, texts, kind="document"):
+            Counting.calls += len(texts)
+            return super().embed(texts, kind)
+
+    path = str(tmp_path / "e.sqlite")
+    a = CachedEmbedder(Counting(64), path)
+    v1 = a.embed(["alpha", "beta"])
+    b = CachedEmbedder(Counting(64), path)  # new process / instance, same file
+    v2 = b.embed(["beta", "alpha", "gamma"])
+    assert Counting.calls == 3 and v2[1] == v1[0] and b.hits == 2

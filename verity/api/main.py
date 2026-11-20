@@ -174,7 +174,7 @@ def list_sources(engagement_id: str, status: str = "active"):
     return clean(list(db.sources().find(q, {"raw_text": 0}).sort("ingested_at", -1)))
 
 
-@app.get("/sources/{source_id}", dependencies=[Auth])
+@app.get("/sources/{source_id:path}", dependencies=[Auth])
 def get_source(source_id: str):
     """Original source text - the UI highlights cited passages using chunk char offsets."""
     s = db.sources().find_one({"_id": source_id})
