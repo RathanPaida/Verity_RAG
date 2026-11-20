@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verity</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">V</span><div><b>Verity</b><small>evidence-grounded due diligence</small></div></div>
+  <div class="top-controls">
+    <label>Engagement <input id="engagement" list="engList" value="acme-payments" size="16"><datalist id="engList"></datalist></label>
+    <label id="keyWrap" class="hidden">API key <input id="apiKey" type="password" size="14"></label>
+    <span id="health" class="pill">connecting…</span>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidenav" id="nav">
+    <button data-view="ask" class="active">Ask</button>
+    <button data-view="sources">Sources</button>
+    <button data-view="search">Search</button>
+    <button data-view="memory">Memory</button>
+    <button data-view="runs">Runs &amp; metrics</button>
+    <button data-view="eval">Evaluation</button>
+  </nav>
+
+  <main>
+    <!-- ASK -->
+    <section id="view-ask" class="view active">
+      <form id="askForm" class="card">
+        <textarea id="question" rows="2" placeholder="Ask about the client's engineering risks…"></textarea>
+        <div class="row wrap">
+          <div id="examples" class="chips"></div>
+          <span class="grow"></span>
+          <details class="filters"><summary>Filters</summary>
+            <div id="kindFilters" class="checks"></div>
+            <label>From <input type="date" id="dateFrom"></label>
+            <label>To <input type="date" id="dateTo"></label>
+          </details>
+          <label class="inline"><input type="checkbox" id="useCache" checked> cache</label>
+          <button class="primary" id="askBtn">Run agents</button>
+        </div>
+      </form>
+      <div id="result"><div class="empty">Ask a question - the supervisor will plan, specialists will research with hybrid search,
+        the verifier will check every claim against its cited passage, and the writer will produce a cited brief.</div></div>
+    </section>
+
+    <!-- SOURCES -->
+    <section id="view-sources" class="view">
+      <form id="uploadForm" class="card row wrap">
+        <input type="file" id="files" multiple accept=".md,.markdown,.txt,.html,.htm,.pdf,.csv,.json">
+        <button class="primary">Import</button>
+        <span class="muted small">Markdown front matter sets title / kind / owner / doc_date. CSV/JSON rows become structured records. Re-importing a changed file creates a new version.</span>
+      </form>
+      <div id="uploadResult"></div>
+      <div id="sourcesTable"></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section id="view-search" class="view">
+      <form id="searchForm" class="card row wrap">
+        <input id="searchQ" class="grow" placeholder="e.g. ERR-4471   or   database failover across regions">
+        <div class="seg" id="modeSeg">
+          <button type="button" data-mode="vector">vector</button><button type="button" data-mode="text">keyword</button><button type="button" data-mode="hybrid" class="active">hybrid</button>
+        </div>
+        <button class="primary">Search</button>
+      </form>
+      <p class="muted small">Hybrid = Atlas <code>$vectorSearch</code> + Atlas Search <code>$search</code> (BM25) fused with Reciprocal Rank Fusion. Ranks from each leg are shown.</p>
+      <div id="searchResults"></div>
+    </section>
+
+    <!-- MEMORY -->
+    <section id="view-memory" class="view">
+      <form id="memForm" class="card">
+        <div class="row wrap">
+          <select id="memType">
+            <option value="client_statement">client statement</option><option value="preference">analyst preference</option>
+            <option value="finding_feedback">finding feedback</option><option value="decision">decision</option><option value="constraint">constraint</option>
+          </select>
+          <input id="memTtl" type="number" min="0" step="1" placeholder="TTL days (optional)" style="width:180px">
+        </div>
+        <textarea id="memContent" rows="2" placeholder="e.g. Client confirmed a DR failover test passed on 2024-10-14 (CTO, workshop 2)."></textarea>
+        <button class="primary">Remember</button>
+      </form>
+      <p class="muted small">Engagement memory is recalled into the supervisor and writer prompts, so it changes the next brief. Client statements are labelled unverified.</p>
+      <div id="memList"></div>
+    </section>
+
+    <!-- RUNS -->
+    <section id="view-runs" class="view">
+      <div id="metricTiles" class="tiles"></div>
+      <h3>Per-node breakdown</h3>
+      <div id="nodeTable"></div>
+      <h3>Recent runs</h3>
+      <div id="runList"></div>
+    </section>
+
+    <!-- EVAL -->
+    <section id="view-eval" class="view">
+      <form id="evalForm" class="card row wrap">
+        <label class="inline"><input type="checkbox" class="evmode" value="vector" checked> vector</label>
+        <label class="inline"><input type="checkbox" class="evmode" value="text" checked> keyword</label>
+        <label class="inline"><input type="checkbox" class="evmode" value="hybrid" checked> hybrid</label>
+        <label>k <input id="evalK" type="number" value="5" min="1" max="20" style="width:60px"></label>
+        <label class="inline"><input type="checkbox" id="evalAgent"> full agent</label>
+        <label class="inline"><input type="checkbox" id="evalJudge"> LLM judge</label>
+        <button class="primary" id="evalBtn">Run evaluation</button>
+      </form>
+      <p class="muted small">Golden set: <code>eval/golden.jsonl</code> - questions with expected source IDs, including unanswerable ones.</p>
+      <div id="evalResult"></div>
+      <h3>History</h3>
+      <div id="evalHistory"></div>
+    </section>
+  </main>
+</div>
+
+<aside id="drawer" class="drawer">
+  <div class="drawer-head"><b id="drawerTitle">Citation</b><button id="drawerClose" aria-label="Close">✕</button></div>
+  <div id="drawerBody"></div>
+</aside>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
