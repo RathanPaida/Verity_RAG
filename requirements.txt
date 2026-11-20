@@ -1,0 +1,18 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pydantic>=2.7
+pymongo>=4.10
+langgraph>=1.0
+langgraph-checkpoint-mongodb>=0.4
+google-genai>=1.30
+google-cloud-storage>=2.18
+anthropic[vertex]>=1.0      # optional provider: Claude on Vertex AI
+pypdf>=5.0
+python-dotenv>=1.0
+# observability (optional): OTEL_EXPORTER=gcp
+opentelemetry-sdk>=1.27
+opentelemetry-exporter-gcp-trace>=1.7
+# dev / tests
+pytest>=8.0
+mongomock>=4.1
