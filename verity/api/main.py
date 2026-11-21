@@ -13,7 +13,8 @@ from typing import Literal
 
 from bson import ObjectId
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -24,19 +25,28 @@ from ..ingest.loaders import SUPPORTED
 from ..ingest.pipeline import ingest_path
 from ..llm.gateway import LLMError
 from ..memory import store as memory
+from ..observability.logs import configure_logging, request_id_var
 from ..observability.tracing import percentile
 from ..retrieval.hybrid import Filters, backends, hybrid_search
+from .middleware import RateLimitMiddleware, RequestContextMiddleware
 
 log = logging.getLogger("verity.api")
-logging.basicConfig(level=logging.INFO)
 STATIC = Path(__file__).parent / "static"
 SAMPLE = Path(__file__).resolve().parents[2] / "data" / "sample"
-MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+MAX_UPLOAD_BYTES = settings.max_upload_mb * 1024 * 1024
 ENGAGEMENT_RE = r"^[a-z0-9-]{3,64}$"
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    configure_logging()
+    problems = settings.problems()
+    if problems:
+        for p in problems:
+            log.error("config: %s", p)
+        if settings.env == "production":
+            raise RuntimeError("refusing to start with invalid production configuration: " + "; ".join(problems))
+    log.info("starting verity", extra={"config": settings.summary()})
     if db.is_mock():
         db.ensure_indexes(settings.embedding_dim, wait=False, log=log.info)
     if settings.auto_ingest_sample and SAMPLE.exists() and \
@@ -44,11 +54,27 @@ async def lifespan(_app: FastAPI):
         log.info("AUTO_INGEST_SAMPLE: ingesting %s", SAMPLE)
         ingest_path(SAMPLE, settings.demo_engagement)
     yield
+    log.info("shutting down: closing MongoDB client")
+    db.close()
 
 
-app = FastAPI(title="Verity", version="1.0.0", description="Evidence-grounded due-diligence agents",
+app = FastAPI(title="Verity", version="1.1.0", description="Evidence-grounded due-diligence agents",
               lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+# Starlette runs the last-added middleware first: request context wraps everything, incl. 429 responses
+app.add_middleware(RateLimitMiddleware)
+if settings.cors_origins:
+    app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET", "POST", "DELETE"],
+                       allow_headers=["Content-Type", "X-API-Key", "X-Request-ID"])
+app.add_middleware(RequestContextMiddleware)
+
+
+@app.exception_handler(LLMError)
+async def llm_error(_request: Request, exc: LLMError):
+    log.warning("upstream model error: %s", exc)
+    return JSONResponse({"detail": "model provider unavailable, retry later", "error": str(exc)[:300],
+                         "request_id": request_id_var.get()}, status_code=502)
+
 
 
 def clean(o):
@@ -118,6 +144,29 @@ class EvalIn(BaseModel):
 @app.get("/", include_in_schema=False)
 def ui():
     return FileResponse(STATIC / "index.html")
+
+
+@app.get("/healthz", include_in_schema=False)
+def healthz():
+    """Liveness: the process is up. No dependency checks, so a slow database never restarts healthy pods."""
+    return {"ok": True}
+
+
+@app.get("/readyz", include_in_schema=False)
+def readyz():
+    """Readiness / startup probe: MongoDB reachable and configuration valid."""
+    checks: dict = {"config": not settings.problems()}
+    try:
+        checks["mongo_ms"] = db.ping()
+    except Exception as e:  # pragma: no cover - exercised against a real cluster
+        checks["mongo_error"] = type(e).__name__
+    ok = checks["config"] and "mongo_ms" in checks
+    return JSONResponse({"ready": ok, **checks}, status_code=200 if ok else 503)
+
+
+@app.get("/version")
+def version():
+    return settings.summary() | {"version": app.version}
 
 
 @app.get("/health")
@@ -201,12 +250,9 @@ def search(body: SearchIn):
 
 @app.post("/ask", dependencies=[Auth])
 def ask(body: AskIn):
-    try:
-        return clean(service.ask(body.question, body.engagement_id, body.user_id,
-                                 body.filters.model_dump(exclude_none=True) if body.filters else None,
-                                 use_cache=body.use_cache))
-    except LLMError as e:
-        raise HTTPException(502, str(e)) from e
+    return clean(service.ask(body.question, body.engagement_id, body.user_id,
+                             body.filters.model_dump(exclude_none=True) if body.filters else None,
+                             use_cache=body.use_cache))
 
 
 @app.get("/runs", dependencies=[Auth])
@@ -257,10 +303,7 @@ def metrics(engagement_id: str, hours: float = 24 * 7):
 def run_eval(body: EvalIn):
     from eval.run_eval import run
 
-    try:
-        return clean(run(body.engagement_id, list(body.modes), body.k, body.agent, body.judge))
-    except LLMError as e:
-        raise HTTPException(502, str(e)) from e
+    return clean(run(body.engagement_id, list(body.modes), body.k, body.agent, body.judge))
 
 
 @app.get("/eval/history", dependencies=[Auth])

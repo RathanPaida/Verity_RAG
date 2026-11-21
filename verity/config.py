@@ -70,6 +70,50 @@ class Settings:
 
     # Security
     api_key = os.getenv("VERITY_API_KEY", "")  # empty = auth disabled (local dev only)
+    # requests per minute per client (API key, else IP) on expensive routes; 0 disables
+    rate_limit_per_minute = _i("RATE_LIMIT_PER_MINUTE", 30)
+    cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+    max_upload_mb = _i("MAX_UPLOAD_MB", 20)
+
+    # Runtime
+    env = os.getenv("ENV", "development")  # development | test | production
+    log_level = os.getenv("LOG_LEVEL", "INFO")
+    log_format = os.getenv("LOG_FORMAT", "json" if os.getenv("K_SERVICE") else "text")  # K_SERVICE = Cloud Run
+    build_sha = os.getenv("BUILD_SHA", "dev")
+    # Gemini backend: auto (Vertex AI when GOOGLE_CLOUD_PROJECT is set) | vertex | api (GEMINI_API_KEY)
+    gemini_backend = os.getenv("GEMINI_BACKEND", "auto")
+    mongo_timeout_ms = _i("MONGO_TIMEOUT_MS", 5000)
+    mongo_max_pool = _i("MONGO_MAX_POOL", 50)
+
+    def problems(self) -> list[str]:
+        """Configuration errors that must stop a production deployment (checked at startup)."""
+        out: list[str] = []
+        if self.llm_provider not in ("gemini", "claude", "fake"):
+            out.append(f"LLM_PROVIDER={self.llm_provider!r} is not one of gemini|claude|fake")
+        if self.embedding_provider not in ("gemini", "vertex", "hash"):
+            out.append(f"EMBEDDING_PROVIDER={self.embedding_provider!r} is not one of gemini|vertex|hash")
+        if self.gemini_backend not in ("auto", "vertex", "api"):
+            out.append(f"GEMINI_BACKEND={self.gemini_backend!r} is not one of auto|vertex|api")
+        if self.gemini_backend == "vertex" and not self.gcp_project:
+            out.append("GEMINI_BACKEND=vertex needs GOOGLE_CLOUD_PROJECT")
+        if self.checkpointer not in ("mongodb", "memory"):
+            out.append(f"CHECKPOINTER={self.checkpointer!r} is not one of mongodb|memory")
+        if self.env == "production":
+            if not self.api_key:
+                out.append("VERITY_API_KEY must be set in production")
+            if self.mongodb_uri.startswith("mongomock://"):
+                out.append("MONGODB_URI=mongomock:// is not allowed in production")
+            if self.llm_provider == "fake" or self.embedding_provider == "hash":
+                out.append("offline providers (fake LLM / hash embeddings) are not allowed in production")
+        return out
+
+    def summary(self) -> dict:
+        """Non-secret view of the effective configuration (logged at startup, served by /version)."""
+        return {"env": self.env, "build": self.build_sha, "llm": self.llm_provider, "model_fast": self.model_fast,
+                "model_strong": self.model_strong, "fallbacks": self.model_fallbacks,
+                "embeddings": f"{self.embedding_provider}:{self.embedding_model}/{self.embedding_dim}",
+                "gemini_backend": self.gemini_backend, "checkpointer": self.checkpointer,
+                "auth": bool(self.api_key), "rate_limit_per_minute": self.rate_limit_per_minute}
 
 
 settings = Settings()

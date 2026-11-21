@@ -15,6 +15,12 @@ RETRY_CODES = [408, 500, 502, 503, 504]  # 429 is handled in the gateway (retryD
 
 
 def backend() -> str:
+    """GEMINI_BACKEND=vertex|api forces a backend; auto picks Vertex AI whenever a GCP project is configured.
+    `api` lets a Cloud Run deployment use a Gemini API key while still running on GCP."""
+    if settings.gemini_backend == "vertex":
+        return "vertex"
+    if settings.gemini_backend == "api":
+        return "gemini-api"
     return "vertex" if settings.gcp_project else "gemini-api"
 
 

@@ -2,7 +2,8 @@
 import os
 
 os.environ.update({"LLM_PROVIDER": "fake", "EMBEDDING_PROVIDER": "hash", "EMBEDDING_DIM": "256",
-                   "VERITY_API_KEY": "", "CHECKPOINTER": "memory", "MONGODB_URI": "mongomock://"})
+                   "VERITY_API_KEY": "", "CHECKPOINTER": "memory", "MONGODB_URI": "mongomock://",
+                   "RATE_LIMIT_PER_MINUTE": "0", "ENV": "test"})
 
 import mongomock  # noqa: E402
 import pytest  # noqa: E402

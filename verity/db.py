@@ -38,7 +38,21 @@ def client():
         import mongomock
 
         return mongomock.MongoClient(tz_aware=True)
-    return MongoClient(settings.mongodb_uri, appname="verity", tz_aware=True)
+    return MongoClient(settings.mongodb_uri, appname="verity", tz_aware=True, retryWrites=True,
+                       serverSelectionTimeoutMS=settings.mongo_timeout_ms, maxPoolSize=settings.mongo_max_pool)
+
+
+def ping() -> float:
+    """Round-trip to the primary in ms (readiness probe). Raises on failure."""
+    t0 = time.perf_counter()
+    client().admin.command("ping")
+    return round((time.perf_counter() - t0) * 1000, 1)
+
+
+def close() -> None:
+    if client.cache_info().currsize:
+        client().close()
+        client.cache_clear()
 
 
 def _db():
