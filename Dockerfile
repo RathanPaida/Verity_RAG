@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1.7
 # ---- build stage: resolve and compile wheels once --------------------------------------------
-FROM python:3.12-slim AS build
+FROM python:3.15-slim AS build
 ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 WORKDIR /build
 COPY requirements.txt .
 RUN pip wheel --wheel-dir /wheels -r requirements.txt
 
 # ---- runtime stage: no compilers, non-root, read-only friendly ------------------------------
-FROM python:3.12-slim AS runtime
+FROM python:3.15-slim AS runtime
 ARG BUILD_SHA=dev
 LABEL org.opencontainers.image.title="verity" \
       org.opencontainers.image.description="Evidence-grounded due-diligence agents (LangGraph + MongoDB Atlas + Gemini)" \
