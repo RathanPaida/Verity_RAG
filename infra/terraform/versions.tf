@@ -3,7 +3,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 6.0"
+      version = "~> 8.12"
     }
   }
   # Remote state: terraform init -backend-config="bucket=<state-bucket>"
