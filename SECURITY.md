@@ -18,7 +18,7 @@ get an acknowledgement within 3 business days.
 | Error-message information leaks | Catch-all handler returns `internal error` and a request ID. Tracebacks only go to logs | `api/middleware.py` |
 | Browser-side attacks on the UI | CSP (`script-src 'self'`, `frame-ancestors 'none'`), nosniff, frame-deny, HSTS over HTTPS. All rendered model text is HTML-escaped | `api/middleware.py`, `api/static/app.js` |
 | Upload abuse | Extension allow-list, size limit (`MAX_UPLOAD_MB`), files written to a temp dir that is removed after ingestion | `api/main.py` |
-| Supply chain | Dependabot, `pip-audit`, Trivy image scan, gitleaks secret scan, pinned major versions, non-root container | `.github/` |
+| Supply chain | Dependabot (grouped, monthly, majors reviewed manually), `pip-audit`, gitleaks secret scan with a reviewed allow-list for test fixtures, container smoke test, non-root image | `.github/` |
 | Credential sprawl in CI/CD | Workload Identity Federation restricted to this repository. No service-account keys | `infra/terraform/cicd.tf` |
 
 ## Secrets handling

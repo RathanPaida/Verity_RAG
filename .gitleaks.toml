@@ -1,0 +1,12 @@
+# gitleaks configuration: default rules plus a reviewed allow-list.
+# Only fake credentials that exist to test redaction (verity/security.py) are allowed; keep this list minimal.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "fake credentials used as redaction test fixtures"
+regexes = [
+  '''AKIAABCDEFGHIJKLMNOP''',
+  '''mongodb\+srv://admin:hunter2@cluster0\.example\.net''',
+  '''mongodb\+srv://u:p@x''',
+]

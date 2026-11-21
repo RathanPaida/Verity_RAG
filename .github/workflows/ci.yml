@@ -92,9 +92,6 @@ jobs:
           curl -fsS -X POST localhost:8080/ask -H 'content-type: application/json' \
             -d '{"engagement_id":"acme-payments","question":"What caused the ERR-4471 errors on PAY-API?"}' | head -c 400
           docker logs verity | tail -20
-      - name: Image vulnerability scan
-        uses: aquasecurity/trivy-action@0.28.0
-        with: { image-ref: "verity:ci", severity: "CRITICAL,HIGH", ignore-unfixed: true, exit-code: "0" }
 
   terraform:
     runs-on: ubuntu-latest

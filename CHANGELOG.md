@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] - 2026-11-22
+
+### Fixed
+- CI container job: removed the third-party image-scanner action. Its pinned tag did not resolve, and the
+  vendor published a critical supply-chain advisory (March 2026). Image CVEs are covered by Dependabot base-image
+  updates for now
+- Secret scan: reviewed allow-list (`.gitleaks.toml`) for the fake credentials used as redaction test fixtures.
+  No real secrets were found in the history
+- Dependabot: one grouped PR per ecosystem per month, lower-bound-only bumps disabled, major versions ignored
+
 ## [1.1.0] - 2026-11-22
 
 ### Added
@@ -21,7 +31,7 @@ All notable changes to this project are documented here. The format follows
   - alert policies and a billing budget
 - CI/CD:
   - lint and type-check jobs; a test matrix with a coverage gate; the eval gate with a report artifact
-  - pip-audit, gitleaks, a container build with smoke test and Trivy scan, Terraform validation
+  - pip-audit, gitleaks, a container build with smoke test, Terraform validation
 - Tag-driven deploy: a revision with no traffic, then a smoke test, then the traffic shift
 - Multi-stage non-root container with a HEALTHCHECK
 - docker-compose with `mongodb-atlas-local`

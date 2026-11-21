@@ -1,18 +1,38 @@
+# Low-noise dependency updates: one grouped PR per ecosystem per month.
+# Major versions are excluded here and upgraded deliberately (see CONTRIBUTING.md); security updates still arrive
+# immediately through GitHub's Dependabot security updates.
 version: 2
 updates:
   - package-ecosystem: pip
     directory: /
-    schedule: { interval: weekly }
-    open-pull-requests-limit: 5
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    versioning-strategy: increase-if-necessary   # don't open PRs that only raise a lower bound
     groups:
-      google: { patterns: ["google-*", "opentelemetry-*"] }
-      langchain: { patterns: ["langgraph*", "langchain*"] }
+      python-deps: { patterns: ["*"], update-types: ["minor", "patch"] }
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: github-actions
     directory: /
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups:
+      actions: { patterns: ["*"] }
+
   - package-ecosystem: docker
     directory: /
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    ignore:
+      - dependency-name: python
+        versions: [">=3.13"]   # runtime upgrades are planned, not automatic
+
   - package-ecosystem: terraform
     directory: /infra/terraform
     schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

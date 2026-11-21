@@ -58,7 +58,7 @@ async def lifespan(_app: FastAPI):
     db.close()
 
 
-app = FastAPI(title="Verity", version="1.1.0", description="Evidence-grounded due-diligence agents",
+app = FastAPI(title="Verity", version="1.1.1", description="Evidence-grounded due-diligence agents",
               lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 # Starlette runs the last-added middleware first: request context wraps everything, incl. 429 responses

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "verity"
-version = "1.1.0"
+version = "1.1.1"
 description = "Evidence-grounded engineering due-diligence agents: LangGraph multi-agent RAG on MongoDB Atlas and Gemini."
 readme = "README.md"
 requires-python = ">=3.10"

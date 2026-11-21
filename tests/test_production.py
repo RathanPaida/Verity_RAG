@@ -181,7 +181,7 @@ def test_gateway_rejects_invalid_json(live_gateway, monkeypatch):
 
 
 @pytest.mark.parametrize("text,secret", [
-    ("key AKIAABCDEFGHIJKLMNOP here", "AKIAABCDEFGHIJKLMNOP"),
+    ("key AKIAABCDEFGHIJKLMNOP here", "AKIAABCDEFGHIJKLMNOP"),  # gitleaks:allow - fake fixture
     ("db mongodb+srv://admin:hunter2@cluster0.example.net/x", "hunter2"),
     ("contact jane.doe@example.com today", "jane.doe@example.com"),
     ("password: Sup3rS3cret!", "Sup3rS3cret!"),
