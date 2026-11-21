@@ -45,6 +45,7 @@ def ask(question: str, engagement_id: str, user_id: str = "analyst", filters: di
     fp = corpus_fingerprint(engagement_id)
     qvec = embed_query(question) if use_cache else None
     if use_cache:
+        assert qvec is not None
         hit = _cache_lookup(engagement_id, qvec, fp, filters)
         if hit:
             hit["metrics"] = {**hit["metrics"], "latency_ms": 0.0, "cost_usd": 0.0, "llm_calls": 0}

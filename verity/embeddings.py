@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import math
+import os
 import re
 from functools import lru_cache
 
@@ -75,8 +75,8 @@ class HashEmbedder(Embedder):
         for t in texts:
             toks = _TOK.findall(t.lower())
             v = [0.0] * self.dim
-            for g in toks + [f"{a}_{b}" for a, b in zip(toks, toks[1:])]:
-                h = int(hashlib.md5(g.encode()).hexdigest(), 16)
+            for g in toks + [f"{a}_{b}" for a, b in zip(toks, toks[1:], strict=False)]:
+                h = int(hashlib.md5(g.encode(), usedforsecurity=False).hexdigest(), 16)
                 v[h % self.dim] += 1.0 if (h >> 64) & 1 else -1.0
             out.append(_norm(v))
         return out
@@ -88,7 +88,7 @@ def _norm(v) -> list[float]:
 
 
 def cosine(a, b) -> float:
-    return sum(x * y for x, y in zip(a, b))  # inputs are L2-normalised
+    return sum(x * y for x, y in zip(a, b, strict=False))  # inputs are L2-normalised
 
 
 class CachedEmbedder(Embedder):
@@ -117,7 +117,7 @@ class CachedEmbedder(Embedder):
             found = {}
             for i in range(0, len(keys), 500):
                 part = keys[i:i + 500]
-                q = f"SELECT k, v FROM emb WHERE k IN ({','.join('?' * len(part))})"
+                q = f"SELECT k, v FROM emb WHERE k IN ({','.join('?' * len(part))})"  # noqa: S608 - placeholders only
                 found.update(dict(self._db.execute(q, part).fetchall()))
         missing = [i for i, k in enumerate(keys) if k not in found]
         self.hits += len(texts) - len(missing)
@@ -126,9 +126,9 @@ class CachedEmbedder(Embedder):
             vecs = self.inner.embed([texts[i] for i in missing], kind=kind)
             with self._lock:
                 self._db.executemany("INSERT OR REPLACE INTO emb VALUES (?, ?)",
-                                     [(keys[i], json.dumps(v)) for i, v in zip(missing, vecs)])
+                                     [(keys[i], json.dumps(v)) for i, v in zip(missing, vecs, strict=True)])
                 self._db.commit()
-            for i, v in zip(missing, vecs):
+            for i, v in zip(missing, vecs, strict=True):
                 found[keys[i]] = v
         return [json.loads(found[k]) if isinstance(found[k], str) else found[k] for k in keys]
 

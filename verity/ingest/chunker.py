@@ -23,10 +23,11 @@ def approx_tokens(text: str) -> int:
 def _sections(text: str) -> list[tuple[list[str], int, int]]:
     """Return [(section_path, start, end)] covering the document."""
     heads = [(m.start(), m.end(), len(m.group(1)), m.group(2)) for m in _HEADING.finditer(text)]
-    out, stack = [], []
+    out: list[tuple[list[str], int, int]] = []
+    stack: list[tuple[int, str]] = []
     if not heads or heads[0][0] > 0:
         out.append(([], 0, heads[0][0] if heads else len(text)))
-    for i, (hs, he, level, title) in enumerate(heads):
+    for i, (_hs, he, level, title) in enumerate(heads):
         stack = [s for s in stack if s[0] < level] + [(level, title)]
         end = heads[i + 1][0] if i + 1 < len(heads) else len(text)
         out.append(([t for _, t in stack], he, end))

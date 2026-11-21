@@ -23,8 +23,9 @@ def gemini_client():
     from google import genai
     from google.genai import types
 
-    http = types.HttpOptions(timeout=settings.llm_timeout_ms, retry_options=types.HttpRetryOptions(
-        attempts=settings.llm_retry_attempts, initial_delay=2.0, max_delay=30.0, exp_base=2.0, http_status_codes=RETRY_CODES))
+    retry = types.HttpRetryOptions(attempts=settings.llm_retry_attempts, initial_delay=2.0, max_delay=30.0,
+                                   exp_base=2.0, http_status_codes=RETRY_CODES)
+    http = types.HttpOptions(timeout=settings.llm_timeout_ms, retry_options=retry)
     if backend() == "vertex":
         return genai.Client(vertexai=True, project=settings.gcp_project, location=settings.gcp_location,
                             http_options=http)

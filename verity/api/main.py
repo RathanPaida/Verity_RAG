@@ -144,7 +144,7 @@ async def ingest(engagement_id: str = Form(..., pattern=ENGAGEMENT_RE), files: l
             (tmp / name).write_bytes(data)
         return {"results": ingest_path(tmp, engagement_id)}
     except ValueError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(400, str(e)) from e
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -206,7 +206,7 @@ def ask(body: AskIn):
                                  body.filters.model_dump(exclude_none=True) if body.filters else None,
                                  use_cache=body.use_cache))
     except LLMError as e:
-        raise HTTPException(502, str(e))
+        raise HTTPException(502, str(e)) from e
 
 
 @app.get("/runs", dependencies=[Auth])
@@ -260,7 +260,7 @@ def run_eval(body: EvalIn):
     try:
         return clean(run(body.engagement_id, list(body.modes), body.k, body.agent, body.judge))
     except LLMError as e:
-        raise HTTPException(502, str(e))
+        raise HTTPException(502, str(e)) from e
 
 
 @app.get("/eval/history", dependencies=[Auth])
@@ -278,7 +278,7 @@ def feedback(body: FeedbackIn):
         return clean(memory.remember(body.engagement_id, body.user_id, body.type, body.content, body.ttl_days,
                                      body.supersedes))
     except ValueError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(400, str(e)) from e
 
 
 @app.get("/memories", dependencies=[Auth])

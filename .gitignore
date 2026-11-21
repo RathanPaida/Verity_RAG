@@ -6,3 +6,15 @@ __pycache__/
 .DS_Store
 .cache/
 eval/results/agent-checkpoint-*
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.terraform/
+*.tfstate*
+*.tfvars
+!*.tfvars.example

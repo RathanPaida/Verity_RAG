@@ -5,14 +5,14 @@ import json
 import re
 from datetime import datetime
 from functools import wraps
+from typing import Any
 
 from .. import db
 from ..config import settings
 from ..llm.gateway import LLMError, generate
 from ..memory import store as memory
 from ..observability.tracing import span
-from ..retrieval.hybrid import (Filters, Hit, corpus_idf, expand_context, hybrid_search, informative_coverage,
-                                tokenize)
+from ..retrieval.hybrid import Filters, Hit, corpus_idf, expand_context, hybrid_search, informative_coverage, tokenize
 from ..retrieval.structured import SpecError, query_records, record_schema
 from . import prompts as P
 from .state import VerityState
@@ -106,7 +106,7 @@ def supervisor(state: VerityState):
     return {"plan": plan or fallback()["subquestions"], "out_of_scope": out["out_of_scope"]}
 
 
-def _react(sub: dict, state: VerityState, labels_used: int, fields: list[str]) -> tuple[dict, list[dict]]:
+def _react(sub: Any, state: VerityState, labels_used: int, fields: list[str]) -> tuple[dict, list[dict]]:
     """ReAct loop for one sub-question. Returns (new evidence by label, tool log)."""
     evidence: dict[str, dict] = {}
     known_chunks = {e["chunk_id"] for e in (state.get("evidence") or {}).values() if e.get("chunk_id")}
@@ -185,7 +185,8 @@ def _react(sub: dict, state: VerityState, labels_used: int, fields: list[str]) -
                 elif action == "expand_context":
                     labs = add_hits(expand_context(act["chunk_id"]))
                     obs = (f"expanded {act['chunk_id']}: added {labs}" if labs else
-                           "no new passages - neighbours are already in the evidence; search a different angle or finish")
+                           "no new passages - neighbours are already in the evidence; "
+                           "search a different angle or finish")
                     s.record_tool(action, {"chunk_id": act["chunk_id"]}, len(labs))
                 else:
                     obs = f"unknown action {action}"

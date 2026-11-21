@@ -15,8 +15,8 @@ from datetime import datetime, timezone
 
 from ..config import PRICES
 
-_current_run: contextvars.ContextVar["Run | None"] = contextvars.ContextVar("verity_run", default=None)
-_current_span: contextvars.ContextVar["Span | None"] = contextvars.ContextVar("verity_span", default=None)
+_current_run: contextvars.ContextVar[Run | None] = contextvars.ContextVar("verity_run", default=None)
+_current_span: contextvars.ContextVar[Span | None] = contextvars.ContextVar("verity_span", default=None)
 
 _otel_tracer = None
 if os.getenv("OTEL_EXPORTER") == "gcp":  # optional dependency
@@ -133,7 +133,7 @@ def span(name: str, **attrs):
         _current_span.reset(token)
         if run is not None:
             run.spans.append(s)
-        if otel_span is not None:
+        if otel_cm is not None and otel_span is not None:
             otel_span.set_attribute("llm.tokens_in", s.tokens_in)
             otel_span.set_attribute("llm.tokens_out", s.tokens_out)
             otel_span.set_attribute("llm.cost_usd", s.cost_usd)

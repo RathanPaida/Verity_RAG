@@ -14,8 +14,9 @@ from __future__ import annotations
 import json
 import logging
 import time
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, Callable
+from typing import Any
 
 from ..config import settings
 from ..observability.tracing import current_span
@@ -61,7 +62,8 @@ def _call_gemini(model: str, system: str, prompt: str, schema: dict | None,
         # Gemini 3 is tuned for the default temperature; control depth with thinking level instead.
         # Inner agent steps (plan / ReAct / verify) use low thinking for latency; analyst & writer use the default.
         if tier == "fast":
-            cfg.thinking_config = types.ThinkingConfig(thinking_level=settings.fast_thinking_level)
+            cfg.thinking_config = types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel(settings.fast_thinking_level.upper()))
     else:
         cfg.temperature = 0.2
     if schema:

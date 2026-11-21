@@ -10,6 +10,7 @@ spec = {"source": "incidents",                       # which table (source key);
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from .. import db
 from ..ingest.loaders import parse_date
@@ -60,7 +61,7 @@ def build_pipeline(engagement_id: str, spec: dict) -> list[dict]:
         if not _FIELD.match(group_by):
             raise SpecError(f"bad group_by {group_by!r}")
         if metric == "count":
-            acc = {"$sum": 1}
+            acc: dict[str, Any] = {"$sum": 1}
         else:
             op, _, fname = metric.partition(":")
             if op not in ("sum", "avg", "max", "min") or not _FIELD.match(fname):
@@ -101,7 +102,8 @@ def record_schema(engagement_id: str, max_values: int = 6) -> str:
             if hasattr(sample, "strftime"):
                 parts.append(f"{name} (date, e.g. {sample:%Y-%m-%d}; filter with gte/lte 'YYYY-MM-DD')")
             elif isinstance(sample, (int, float)):
-                parts.append(f"{name} (number, {min(vals)}..{max(vals)})")
+                nums = [v for v in vals if isinstance(v, (int, float))]
+                parts.append(f"{name} (number, {min(nums)}..{max(nums)})")
             else:
                 distinct = sorted({str(v) for v in vals})
                 more = "" if len(distinct) <= max_values else f", ... {len(distinct)} distinct"

@@ -27,8 +27,19 @@ from verity import db
 from verity.config import settings
 from verity.retrieval.hybrid import Filters, backends, hybrid_search
 
-from .metrics import (bootstrap_ci, citation_precision, fact_recall, hit_at_k, mean, mrr, ndcg_at_k, percentile,
-                      recall_at_k, source_key, violates)
+from .metrics import (
+    bootstrap_ci,
+    citation_precision,
+    fact_recall,
+    hit_at_k,
+    mean,
+    mrr,
+    ndcg_at_k,
+    percentile,
+    recall_at_k,
+    source_key,
+    violates,
+)
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent

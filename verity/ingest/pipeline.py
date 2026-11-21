@@ -50,7 +50,8 @@ def ingest_document(doc: Document, engagement_id: str) -> dict:
     if latest:  # older versions stay for audit / diff but leave retrieval
         db.sources().update_many({"engagement_id": engagement_id, "source_key": doc.source_key,
                                   "status": "active"}, {"$set": {"status": "superseded"}})
-        db.chunks().update_many({"engagement_id": engagement_id, "source_id": {"$regex": f"^{re.escape(engagement_id)}:{re.escape(doc.source_key)}@"},
+        prefix = f"^{re.escape(engagement_id)}:{re.escape(doc.source_key)}@"
+        db.chunks().update_many({"engagement_id": engagement_id, "source_id": {"$regex": prefix},
                                  "status": "active"}, {"$set": {"status": "superseded"}})
 
     db.sources().insert_one({
@@ -65,7 +66,7 @@ def ingest_document(doc: Document, engagement_id: str) -> dict:
         "owner": doc.owner, "doc_date": doc.doc_date, "title": doc.title, "section_path": p.section_path,
         "chunk_index": i, "char_start": p.char_start, "char_end": p.char_end, "text": p.text,
         "fields": p.fields, "embedding": v, "embedding_model": emb.name, "status": "active", "ingested_at": now,
-    } for i, (p, v) in enumerate(zip(pieces, vectors))])
+    } for i, (p, v) in enumerate(zip(pieces, vectors, strict=True))])
     log.info("ingested %s (%d chunks)", source_id, len(pieces))
     return {"source_id": source_id, "status": "updated" if latest else "created", "chunks": len(pieces),
             "privacy_findings": findings}

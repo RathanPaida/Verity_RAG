@@ -24,7 +24,7 @@ def engagement_from_object(name: str) -> str | None:
 
 def download(uri: str) -> tuple[Path, dict[str, str]]:
     """Download one object or every supported object under a prefix. Returns (dir, {filename: gs_uri})."""
-    from google.cloud import storage
+    from google.cloud import storage  # type: ignore[attr-defined]  # optional extra: verity[gcp]
 
     bucket_name, prefix = parse_gs(uri)
     bucket = storage.Client().bucket(bucket_name)

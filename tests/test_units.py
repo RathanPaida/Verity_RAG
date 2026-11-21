@@ -117,7 +117,7 @@ def test_answer_metrics_and_bootstrap():
     assert fact_recall("only 3600", ["3,600|3600", "2,800|2800"]) == 0.5
     assert violates("The platform has NO MATERIAL RISKS.", ["no material risks"])
     lo, hi = bootstrap_ci([1.0] * 40 + [0.0] * 10)
-    assert lo < 0.8 < hi and 0.6 < lo and hi <= 0.92
+    assert lo < 0.8 < hi and lo > 0.6 and hi <= 0.92
 
 
 def test_source_spec_validated():

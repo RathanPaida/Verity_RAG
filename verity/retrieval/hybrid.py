@@ -16,7 +16,7 @@ from pymongo.errors import OperationFailure
 
 from .. import db
 from ..config import settings
-from ..embeddings import cosine, embed_query, get_embedder
+from ..embeddings import cosine, embed_query
 
 _backend = {"vector": "unknown", "text": "unknown"}
 
@@ -83,7 +83,7 @@ class Hit:
     extra: dict = field(default_factory=dict)
 
     @classmethod
-    def from_doc(cls, d: dict) -> "Hit":
+    def from_doc(cls, d: dict) -> Hit:
         return cls(chunk_id=d["_id"], source_id=d["source_id"], title=d.get("title", ""), kind=d.get("kind", ""),
                    section_path=d.get("section_path", []), text=d["text"], doc_date=d.get("doc_date"),
                    fields=d.get("fields"))
@@ -119,8 +119,11 @@ def vector_search(query: str, f: Filters, k: int) -> list[tuple[dict, float]]:
 
 
 _TOKEN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
-_STOP = set("the a an and or of to in on for is are was were be by with what which how why when who does do "
-            "did has have this that it its at as from".split())
+_STOP = {
+    "the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "is", "are", "was", "were", "be", "by", "with",
+    "what", "which", "how", "why", "when", "who", "does", "do", "did", "has", "have", "this", "that", "it", "its",
+    "at", "as", "from",
+}
 
 
 def tokenize(text: str) -> list[str]:
@@ -176,7 +179,7 @@ def bm25(query: str, docs: list[dict], k1: float = 1.5, b: float = 0.75) -> list
     df = Counter(t for ts in toks for t in set(ts))
     n = len(docs)
     out = []
-    for d, ts in zip(docs, toks):
+    for d, ts in zip(docs, toks, strict=True):
         tf = Counter(ts)
         s = 0.0
         for t in q:
