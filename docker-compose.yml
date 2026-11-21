@@ -1,0 +1,28 @@
+# Local stack with real Atlas Vector Search + Atlas Search ($vectorSearch / $search) via mongodb-atlas-local.
+#   docker compose up --build        -> UI on http://localhost:8080
+#   docker compose run --rm api python -m scripts.setup_db
+services:
+  mongo:
+    image: mongodb/mongodb-atlas-local:8.0
+    ports: ["27017:27017"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      retries: 10
+    volumes: [mongo-data:/data/db]
+
+  api:
+    build: .
+    depends_on:
+      mongo: { condition: service_healthy }
+    ports: ["8080:8080"]
+    env_file: [.env]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/?directConnection=true
+      AUTO_INGEST_SAMPLE: "1"
+      LOG_FORMAT: text
+    read_only: true
+    tmpfs: [/tmp]
+
+volumes:
+  mongo-data:
