@@ -1,7 +1,7 @@
 # Field notes → feature requests
 
-Friction found while building and running Verity against real models, written as product feedback (the
-"critical feedback loop" part of a forward-deployed role). Each row says what changed in the code.
+Issues found while building and operating Verity against real models, quotas and infrastructure, written up as
+product feedback. Each row records the observation, its impact and what changed in the code.
 
 | Date | Area | Observation | Impact | Fix in Verity / proposed feature |
 |---|---|---|---|---|

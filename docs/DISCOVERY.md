@@ -1,4 +1,4 @@
-# Phase 0: Discovery & framing
+# Discovery and problem framing
 
 ## Problem
 Engineering due diligence (M&A, vendor risk, platform audits) means reading dozens of architecture docs,

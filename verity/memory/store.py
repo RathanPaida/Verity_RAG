@@ -1,8 +1,7 @@
-"""Engagement memory (Track 1, lightweight): analyst preferences, client statements, finding feedback, decisions.
+"""Engagement memory: analyst preferences, client statements, finding feedback, decisions.
 
 Memories are recalled into the Supervisor/Writer prompts so they visibly change the next brief.
 Lifecycle: create -> (supersede via correct) -> soft delete; optional TTL through `expires_at`.
-Full lifecycle reference implementation: ../recallops.
 """
 from __future__ import annotations
 
@@ -13,7 +12,7 @@ from pymongo.errors import OperationFailure
 
 from .. import db
 from ..embeddings import cosine, embed_query, get_embedder
-from ..security import redact
+from ..security import is_off_record, redact
 
 TYPES = ["preference", "client_statement", "finding_feedback", "decision", "constraint"]
 
@@ -22,6 +21,8 @@ def remember(engagement_id: str, user_id: str, type: str, content: str, ttl_days
              supersedes: str | None = None) -> dict:
     if type not in TYPES:
         raise ValueError(f"type must be one of {TYPES}")
+    if is_off_record(content):  # consent: explicitly off-the-record statements are never persisted
+        raise ValueError("statement is marked off the record and was not stored")
     clean, findings = redact(content)
     now = datetime.now(timezone.utc)
     doc = {"engagement_id": engagement_id, "owner_id": user_id, "type": type, "content": clean,

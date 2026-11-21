@@ -1,157 +1,206 @@
-# Verity: evidence-grounded due-diligence agents
+# Verity
 
-A team of agents that turns a client's architecture docs, postmortems, security reviews, repository summary and
-structured incident records into a **cited engineering risk brief**. It flags **contradictions between sources**
-and **refuses to guess** when the evidence isn't there, producing questions for the next client discovery session
-instead. It remembers each engagement, and every run is traced with latency, tokens, tokens/sec and $ cost and
-evaluated against a golden set.
+[![ci](https://github.com/RathanPaida/Verity_RAG/actions/workflows/ci.yml/badge.svg)](https://github.com/RathanPaida/Verity_RAG/actions/workflows/ci.yml)
+![python](https://img.shields.io/badge/python-3.10%20%7C%203.12-blue)
+![license](https://img.shields.io/badge/license-MIT-green)
 
-Stack: **LangGraph** multi-agent (MongoDB checkpointer) · **Gemini** via Vertex AI or the Gemini API (or Claude on Vertex AI) ·
-**MongoDB Atlas** Vector Search + Atlas Search (hybrid, RRF) · FastAPI + web UI on **Cloud Run** · GCS + Eventarc
-ingestion · Secret Manager · Cloud Trace · GitHub Actions eval gate.
+**Evidence-grounded engineering due-diligence agents.**
 
-📊 **[docs/RESULTS.md](docs/RESULTS.md) shows a real run with Gemini**: briefs, citations, the conflict it caught, the refusal,
-the memory effect, and the evaluation.
+Verity reads a client's architecture docs, postmortems, security reviews, repository summary and structured
+incident/SLO records, and writes a **cited engineering risk brief**:
 
-**[PLAN.md](PLAN.md)** covers the JD mapping, features, architecture, data model and per-phase status;
-**[docs/DISCOVERY.md](docs/DISCOVERY.md)** covers the problem framing and success metrics.
+- Every finding links to the exact passage it came from.
+- Contradictions between sources are flagged.
+- When the evidence isn't there, it **abstains** and writes the questions to ask in the next client session.
 
-## 1. Try it in 2 minutes (fully offline)
+The stack:
 
-No Atlas, no GCP, no keys. This uses in-memory MongoDB, hash embeddings and a heuristic stand-in for the LLM, and
-the sample corpus is auto-ingested.
+| Layer | Technology |
+|---|---|
+| Orchestration | **LangGraph** multi-agent graph (supervisor → ReAct researcher → analyst → self-reflection verifier → writer) |
+| Retrieval | **MongoDB Atlas** Vector Search + Atlas Search, fused with RRF |
+| Models | **Gemini** on Vertex AI or the Gemini API, behind a resilient model gateway |
+| Serving | FastAPI and a web UI on **Cloud Run** |
+| Infrastructure | Terraform for Cloud Run, Eventarc, GCS, Secret Manager, Workload Identity Federation, Cloud Monitoring |
 
-```bash
-cd verity
-python -m venv .venv && .venv\Scripts\activate        # macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-python -m scripts.serve_demo                            # → http://localhost:8000
-pytest -q                                               # 23 tests
+```
+ GCS upload ─▶ Eventarc ─▶ /events/gcs ─┐
+ UI / API  ─▶ /ingest ──────────────────┤ redact → version → chunk (section paths, offsets) → embed ─▶ Atlas
+                                        │
+ /ask ─▶ rate limit ─▶ semantic cache ─▶ LangGraph ──────────────────────────────────────────────────────┐
+           recall memory → SUPERVISOR (plan, delegate) → RESEARCHER (ReAct: hybrid_search · query_records  │
+           · expand_context) → ANALYST (claims, conflicts, gaps) → VERIFIER ─┬─ retry ─▶ RESEARCHER       │
+                                                                             ├─ weak  ─▶ DISCOVERY PACK    │
+                                                                             └─ ok    ─▶ WRITER (cited)    │
+           every node/tool = span (latency · tokens · $ · model) → runs + Cloud Trace; state → MongoDBSaver│
 ```
 
-> The offline mode shows the **plumbing**: ingestion, hybrid retrieval, the agent graph, citations, abstention,
-> tracing, cache, eval. Answer quality comes from a real model; offline "answers" are extracted sentences.
+## Highlights
 
-## 2. Real run with Gemini
+**Grounded answers**
+- Citations are validated against the retrieved evidence set.
+- The verifier checks that each claim is entailed by its cited passages, and loops back to research when it isn't.
+- Weak evidence produces a discovery pack instead of a guess.
 
-**Fastest path, Gemini API key** (no GCP project needed):
+**Hybrid retrieval** over unstructured documents and structured records:
+- vector and BM25 search with RRF fusion and metadata pre-filters
+- whitelisted aggregation specs over CSV/JSON rows (never raw MQL)
+
+**Multi-tenant by construction**
+- IDs are scoped to the engagement.
+- Every query carries a mandatory `engagement_id` filter.
+- Leakage is measured by the evaluation.
+
+**Resilient model gateway**
+- fast and strong tiers with an ordered fallback chain
+- a per-model circuit breaker that honours 429 `retryDelay`
+- cost accounting that includes thinking tokens
+
+**Evaluation as a release gate**
+- a 54-question golden set in 9 categories, including cross-tenant leakage and prompt injection
+- 95% bootstrap confidence intervals, an LLM judge and retrieval ablations
+- a CI regression gate
+
+**Production operations**
+- structured logs correlated with request and trace IDs
+- liveness and readiness probes, rate limiting, security headers
+- startup config validation, SLOs with alert policies and runbooks, tag-driven deploys
+
+## Quick start (offline, no keys)
 
 ```bash
-set GEMINI_API_KEY=...            # macOS/Linux: export GEMINI_API_KEY=...
-python -m scripts.showcase        # ingest → search → 6 agent runs → full eval + LLM judge → docs/RESULTS.md
+python -m venv .venv && . .venv/bin/activate     # Windows: .venv\Scripts\activate
+make install                                     # or: pip install -r requirements-dev.txt
+make demo                                        # http://localhost:8000, sample corpus auto-ingested
+make check                                       # ruff · mypy · 53 tests + coverage gate · eval gate
 ```
 
-**Production path: Vertex AI + Atlas**
+Offline mode uses in-memory MongoDB, hash embeddings and a deterministic stand-in for the LLM. It exercises
+every code path. Answer quality numbers come from real-model runs (see [Results](#results)).
+
+**With real Atlas Search locally:**
 
 ```bash
-copy .env.example .env            # MONGODB_URI (Atlas), GOOGLE_CLOUD_PROJECT (switches the client to Vertex AI)
-gcloud auth application-default login
-python -m scripts.setup_db        # vector + text search indexes, TTLs; waits until queryable
+cp .env.example .env    # add GEMINI_API_KEY
+docker compose up       # starts mongodb-atlas-local + the API
+```
+
+**With Gemini and Atlas:**
+
+```bash
+cp .env.example .env    # MONGODB_URI, GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT
+python -m scripts.setup_db
 python -m scripts.ingest data/sample --engagement acme-payments
-uvicorn verity.api.main:app       # UI at http://localhost:8000, API docs at /docs
-python -m scripts.ask "What are the top reliability risks of the payments platform?" --trace
-python -m eval.run_eval --agent --judge --save-baseline
-python -m scripts.load_test --concurrency 4 --requests 20 --no-cache
+make run
 ```
 
-**Models & resilience.** `MODEL_FAST` (supervisor, ReAct, verifier) and `MODEL_STRONG` (analyst, writer, judge)
-are configurable; defaults are `gemini-3.8-flash` / `gemini-3.1-pro-preview`. Inner steps use Gemini 3 `thinking_level=low`.
-The gateway honours 429 `retryDelay`, puts rate-limited models on a cooldown (circuit breaker), and walks the
-`MODEL_FALLBACKS` chain on quota or overload errors. Each span records which model actually answered, and cost
-uses the price table in `config.py`, which counts thinking tokens as output.
+## Deploy to Google Cloud
 
-Deploy: `PROJECT=my-gcp-project ./deploy/deploy.sh`. It sets up Cloud Run, Secret Manager, the GCS bucket, the
-Eventarc trigger and a backfill Job. After that, dropping a file at `gs://<bucket>/<engagement>/file.md` ingests
-it automatically.
+```bash
+cd infra/terraform && terraform init -backend-config="bucket=<state-bucket>" && terraform apply
+# add the secret values, set the repo variables printed by `terraform output`, then:
+git tag v1.1.0 && git push --tags
+```
 
-## 3. Demo script
+The tag triggers [deploy.yml](.github/workflows/deploy.yml):
+1. Build the image and push it to Artifact Registry, authenticating keylessly through WIF.
+2. Deploy a Cloud Run revision that receives no traffic.
+3. Smoke test `/readyz` and `/version` on the revision's tagged URL.
+4. Shift traffic, all at once or as a canary.
 
-| # | Do | Show |
-|---|---|---|
-| 1 | **Sources** → import files (or point at `data/sample`) | versions, chunk counts, redaction; click a source for its original text |
-| 2 | **Search** `ERR-4471` in *keyword* vs *vector* vs *hybrid* | exact codes need the keyword leg; RRF ranks per leg |
-| 3 | **Ask** "Is the payments platform really able to survive a regional outage?" | multi-source evidence (architecture §4, July postmortem, 2022 runbook, incident CSV); plan → ReAct steps → verifier |
-| 4 | Click any `[S#]` | drawer with the exact passage **highlighted inside the original document** (char offsets), source version and date |
-| 5 | Conflicts box | "multi-region active-active" (architecture doc) vs single-region data tier (postmortem) |
-| 6 | Ask "What was the result of the SOC 2 Type II audit?" | `insufficient evidence` + Discovery Pack, zero citations |
-| 7 | **Memory** → client statement "DR failover test passed 2024-10-14", then ask again | brief changes, statement labelled unverified; cache invalidated automatically |
-| 8 | **Runs & metrics** | p50/p95, cost/request, tokens/sec, per-node breakdown; click a run to replay it |
-| 9 | **Evaluation** → run with *full agent* + *LLM judge* | recall/MRR/nDCG per mode, abstention, citation precision, faithfulness, history |
+Details: [infra/README.md](infra/README.md) and [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
-## 4. API
+## API
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/ingest` | multipart upload (md/txt/html/pdf/csv/json), versioned |
-| POST | `/events/gcs` | Eventarc target for GCS object finalize (Cloud Run IAM) |
-| GET | `/engagements`, `/sources`, `/sources/{id}`, `/chunks/{id}` | browse corpus & exact passages |
-| POST | `/search` | `vector` / `text` / `hybrid` with metadata filters |
-| POST | `/ask` | agent run → brief, citations, conflicts, discovery, plan, tool log, verification, spans, metrics |
-| GET | `/runs`, `/runs/{id}`, `/metrics` | traces and LLM-native metrics |
-| POST | `/eval`, GET `/eval/history` | golden-set evaluation |
+| POST | `/ask` | agent run: brief, citations, conflicts, discovery pack, plan, tool log, verification, spans, cost |
+| POST | `/search` | `vector` / `text` / `hybrid`, with metadata filters |
+| POST | `/ingest` | multipart upload (md/txt/html/pdf/csv/json), versioned and redacted |
+| POST | `/events/gcs` | Eventarc target for GCS object-finalize events (Cloud Run IAM) |
+| GET | `/engagements`, `/sources`, `/sources/{id}`, `/chunks/{id}` | browse the corpus and exact passages |
+| GET | `/runs`, `/runs/{id}`, `/metrics` | traces and LLM metrics (p50/p95, cost/request, tokens/sec, per node) |
+| POST/GET | `/eval`, `/eval/history` | golden-set evaluation |
 | POST/GET/DELETE | `/feedback`, `/memories`, `/memories/{id}` | engagement memory |
+| GET | `/healthz`, `/readyz`, `/version` | liveness, readiness (MongoDB ping), build and config |
 
-All endpoints except `/health`, `/` and `/events/gcs` require `X-API-Key` when `VERITY_API_KEY` is set.
+Authentication is `X-API-Key`, backed by Secret Manager. Responses carry `X-Request-ID`. Expensive routes are
+rate limited per client. OpenAPI is served at `/docs`.
 
-## 5. Layout
-
-```
-verity/   config · db · embeddings · security · service
-          llm/gateway.py            gemini | claude | fake, usage capture
-          ingest/                   loaders · chunker · pipeline · gcs
-          retrieval/                hybrid (RRF + fallbacks + IDF helpers) · structured (safe aggregations)
-          agents/                   state · prompts · nodes · graph (LangGraph + MongoDBSaver)
-          memory/store.py           engagement memory
-          observability/tracing.py  runs/spans, cost, tokens/sec, OpenTelemetry
-          api/main.py + static/     REST API + single-page UI
-eval/     golden.jsonl · metrics · judge (LLM-as-judge) · run_eval (baseline + gate) · baseline.json
-scripts/  serve_demo · showcase · setup_db · ingest · ask · explain_query · load_test
-deploy/   deploy.sh (Cloud Run, Secret Manager, GCS, Eventarc, Job)   .github/workflows/ci.yml
-docs/     RESULTS.md (real run) · DISCOVERY.md · FIELD_NOTES.md
-```
-
-## 6. Results
+## Results
 
 ### Evaluation design ([eval/golden.jsonl](eval/golden.jsonl))
 
-**54 questions in 9 categories:**
+54 questions in 9 categories:
 
 | keyword | semantic | multi-source | structured | conflict | temporal | unanswerable | cross-tenant | injection |
 |---|---|---|---|---|---|---|---|---|
 | 8 | 10 | 10 | 8 | 4 | 3 | 5 | 3 | 3 |
 
 Each question carries:
-- expected source IDs (46 of the 54 have them)
+- expected source IDs
 - facts the answer must contain
-- strings it must never contain (another client's data, injected instructions)
-- whether a conflict between sources should be flagged
+- strings it must never contain
+- whether the sources conflict
 
-The corpus has 14 Acme sources (12 documents + 2 CSV tables) plus a second client ("Globex") whose documents
-deliberately contain the answers to Acme's cross-tenant questions. A partner document also contains a planted
-prompt injection. All metrics are reported with 95% bootstrap confidence intervals and per-category breakdowns.
+The corpus:
+- 14 sources for the first client.
+- A second client whose documents hold the answers to the first client's cross-tenant questions.
+- A partner document with a planted prompt injection.
 
-### Retrieval with Gemini embeddings (46 questions; full table in [docs/ABLATIONS.md](docs/ABLATIONS.md))
+### Retrieval with Gemini embeddings (46 answerable questions, [docs/ABLATIONS.md](docs/ABLATIONS.md))
 
 | mode | recall@5 [95% CI] | MRR [95% CI] |
 |---|---|---|
 | vector | 0.98 [0.95–1.00] | 0.95 [0.90–0.99] |
 | keyword (BM25) | 0.90 [0.81–0.97] | 0.83 [0.73–0.91] |
-| hybrid (RRF, weights 1.0 / 0.5) | 0.98 [0.95–1.00] | 0.95 [0.90–0.99] |
+| hybrid (RRF 1.0 / 0.5) | 0.98 [0.95–1.00] | 0.95 [0.90–0.99] |
 
-Cross-tenant leakage: 0 passages across all configurations.
+Cross-tenant leakage was 0 passages in every configuration.
 
-### Agent with Gemini (first run, 12-question set; full report in [docs/RESULTS.md](docs/RESULTS.md))
+### Agent with Gemini (first 12-question run, [docs/RESULTS.md](docs/RESULTS.md))
 
 | abstention accuracy | citation precision | faithfulness (LLM judge) | mean cost / question |
 |---|---|---|---|
 | 12/12 | 0.84 | 0.88 | $0.006 |
 
-The 54-question agent evaluation (fact recall, conflict detection, injection and leakage safety) is resumable:
-`python -m eval.run_eval --ingest data/sample --agent --judge --resume --out eval/results/agent-54.json`.
-The free Gemini tier allows 1,000 embedding requests per day, so a full run may span two days. A persistent
-embedding cache (`.cache/embeddings.sqlite`) means repeat runs don't spend quota again.
+The full 54-question agent evaluation is resumable:
 
-### Offline baseline (fake LLM + hash embeddings, used by the CI gate)
+```bash
+python -m eval.run_eval --ingest data/sample --agent --judge --resume
+```
 
-Hybrid recall@5 0.90 on the 54-question set. The offline stand-in only shows that the harness and gate work;
-quality figures come from the Gemini runs above.
+CI gates every change on the offline baseline ([ADR 0005](docs/adr/0005-offline-deterministic-mode.md)).
+
+## Documentation
+
+| Doc | Contents |
+|---|---|
+| [docs/DESIGN.md](docs/DESIGN.md) | architecture, agent graph, data model, request lifecycle, risks, roadmap |
+| [docs/adr/](docs/adr/) | architecture decision records |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | SLOs, signals, alerts and runbooks, deploy and rollback, routine tasks, retention |
+| [SECURITY.md](SECURITY.md) | threat model and controls, secrets handling, reporting |
+| [docs/FIELD_NOTES.md](docs/FIELD_NOTES.md) | issues found running against real models and quotas, and the fix for each |
+| [docs/DISCOVERY.md](docs/DISCOVERY.md) | problem framing, users, success metrics |
+| [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md) | workflow, conventions, releases |
+
+## Layout
+
+```
+verity/   config · db · embeddings · security · service
+          api/           main (routes, probes) · middleware (request context, security headers, rate limit) · static UI
+          agents/        state · prompts · nodes · graph (LangGraph + MongoDBSaver)
+          retrieval/     hybrid (RRF + fallbacks) · structured (safe aggregations)
+          ingest/        loaders · chunker · pipeline · gcs
+          llm/           gateway (tiers, fallback chain, circuit breaker) · google_client (Vertex / API)
+          memory/        engagement memory
+          observability/ tracing (spans, cost, OpenTelemetry) · logs (Cloud Logging JSON)
+eval/     golden set · metrics · LLM judge · run_eval (baseline + gate) · ablate
+infra/    terraform (Cloud Run, Eventarc, GCS, Secret Manager, WIF, monitoring)
+scripts/  setup_db · ingest · ask · showcase · load_test · explain_query · serve_demo
+tests/    unit · end-to-end · API · production hardening
+```
+
+## License
+
+MIT

@@ -189,3 +189,10 @@ def test_gateway_rejects_invalid_json(live_gateway, monkeypatch):
 def test_redaction_removes_secrets_before_embedding(text, secret):
     clean, findings = redact(text)
     assert secret not in clean and findings
+
+
+def test_off_record_statements_are_never_stored(client):
+    r = client.post("/feedback", json={"engagement_id": "acme-payments", "type": "client_statement",
+                                       "content": "Off the record, the DR test actually failed"})
+    assert r.status_code == 400 and "off the record" in r.json()["detail"]
+    assert not client.get("/memories", params={"engagement_id": "acme-payments"}).json()
