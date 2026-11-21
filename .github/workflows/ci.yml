@@ -38,7 +38,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - name: Unit, end-to-end and API tests with coverage gate
         run: pytest --cov --cov-report=xml --cov-report=term
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: matrix.python == '3.12'
         with: { name: coverage, path: coverage.xml }
 
@@ -52,7 +52,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - name: Retrieval + agent eval on the 54-question golden set (fails on regression vs eval/baseline.json)
         run: python -m eval.run_eval --ingest data/sample --agent --judge --gate --out eval-report.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with: { name: eval-report, path: eval-report.json }
 
