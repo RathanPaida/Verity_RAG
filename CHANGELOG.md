@@ -6,6 +6,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [1.1.1] - 2026-11-22
 
+### Added
+- Full 54-question evaluation with Gemini and an error analysis (`docs/EVALUATION.md`)
+
 ### Fixed
 - CI container job: removed the third-party image-scanner action. Its pinned tag did not resolve, and the
   vendor published a critical supply-chain advisory (March 2026). Image CVEs are covered by Dependabot base-image

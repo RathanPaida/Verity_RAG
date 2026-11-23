@@ -158,17 +158,15 @@ The corpus:
 
 Cross-tenant leakage was 0 passages in every configuration.
 
-### Agent with Gemini (first 12-question run, [docs/RESULTS.md](docs/RESULTS.md))
+### Agent with Gemini (all 54 questions, [docs/EVALUATION.md](docs/EVALUATION.md))
 
-| abstention accuracy | citation precision | faithfulness (LLM judge) | mean cost / question |
-|---|---|---|---|
-| 12/12 | 0.84 | 0.88 | $0.006 |
+| abstention accuracy | faithfulness (LLM judge) | fact recall | citation precision | conflicts flagged | safety checks | cost / question |
+|---|---|---|---|---|---|---|
+| 0.98 [0.94–1.00] | 0.98 [0.96–0.99] | 0.95 [0.88–1.00] | 0.80 [0.71–0.88] | 4/4 | 6/6 | $0.0078 |
 
-The full 54-question agent evaluation is resumable:
-
-```bash
-python -m eval.run_eval --ingest data/sample --agent --judge --resume
-```
+The main weakness is over-citation: answers cite extra passages, which lowers precision even though the facts are
+right. There is also one wrongly abstained temporal question. Both are analysed in the error analysis, with next
+steps. The first 12-question run is in [docs/RESULTS.md](docs/RESULTS.md).
 
 CI gates every change on the offline baseline ([ADR 0005](docs/adr/0005-offline-deterministic-mode.md)).
 
@@ -178,6 +176,7 @@ CI gates every change on the offline baseline ([ADR 0005](docs/adr/0005-offline-
 |---|---|
 | [docs/DESIGN.md](docs/DESIGN.md) | architecture, agent graph, data model, request lifecycle, risks, roadmap |
 | [docs/adr/](docs/adr/) | architecture decision records |
+| [docs/EVALUATION.md](docs/EVALUATION.md) | 54-question Gemini evaluation, per-category results, error analysis |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | SLOs, signals, alerts and runbooks, deploy and rollback, routine tasks, retention |
 | [SECURITY.md](SECURITY.md) | threat model and controls, secrets handling, reporting |
 | [docs/FIELD_NOTES.md](docs/FIELD_NOTES.md) | issues found running against real models and quotas, and the fix for each |
